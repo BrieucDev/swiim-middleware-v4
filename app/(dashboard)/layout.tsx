@@ -1,0 +1,25 @@
+import { Sidebar } from '@/components/layout/Sidebar'
+import { Header } from '@/components/layout/Header'
+import { prisma } from '@/lib/prisma'
+
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const stores = await prisma.store.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  })
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="ml-64 flex-1">
+        <Header stores={stores} />
+        <main className="p-8">{children}</main>
+      </div>
+    </div>
+  )
+}
+

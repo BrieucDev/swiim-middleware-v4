@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  companyName   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  stores        Store[]
+}
+
+model Store {
+  id        String        @id @default(cuid())
+  name      String
+  city      String?
+  address   String?
+  userId    String?       // Optional for migration, then required
+  user      User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receipts  Receipt[]
+  pos       PosTerminal[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model PosTerminal {
+  id          String    @id @default(cuid())
+  name        String
+  identifier  String    @unique
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  status      String    // "ACTIF" | "INACTIF"
+  lastSeenAt  DateTime?
+  receipts    Receipt[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Customer {
+  id             String          @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String          @unique
+  receipts       Receipt[]
+  loyaltyAccount LoyaltyAccount?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Receipt {
+  id            String            @id @default(cuid())
+  posId         String
+  pos           PosTerminal       @relation(fields: [posId], references: [id], onDelete: Cascade)
+  storeId       String
+  store         Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customerId    String?
+  customer      Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  status        String            // "EMIS" | "RECLAME" | "REMBOURSE" | "ANNULE"
+  totalAmount   Decimal           @db.Decimal(12,2)
+  currency      String            @default("EUR")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  lineItems     ReceiptLineItem[]
+}
+
+model ReceiptLineItem {
+  id          String   @id @default(cuid())
+  receiptId   String
+  receipt     Receipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  category    String   // "Livres", "Hi-Tech", "Gaming", ...
+  productName String
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(12,2)
+}
+
+model LoyaltyProgram {
+  id               String          @id @default(cuid())
+  name             String
+  description      String?
+  pointsPerEuro    Float           @default(1)
+  conversionRate   Int             @default(100) // X points =
+  conversionValue  Float           @default(5)   // Y €
+  bonusCategories  Json?           // { "Livres": 2, "Vinyles": 2 }
+  pointsExpiryDays Int?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  tiers            LoyaltyTier[]
+  accounts         LoyaltyAccount[]
+  campaigns        LoyaltyCampaign[]
+}
+
+model LoyaltyTier {
+  id         String         @id @default(cuid())
+  programId  String
+  program    LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  name       String         // Bronze, Argent, Or
+  minSpend   Float
+  maxSpend   Float?
+  benefits   Json?
+  sortOrder  Int            @default(0)
+  accounts   LoyaltyAccount[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model LoyaltyAccount {
+  id          String         @id @default(cuid())
+  customerId  String         @unique
+  customer    Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  programId   String
+  program     LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  tierId      String?
+  tier        LoyaltyTier?   @relation(fields: [tierId], references: [id], onDelete: SetNull)
+  points      Int            @default(0)
+  totalSpend  Float          @default(0)
+  lastActivity DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model LoyaltyCampaign {
+  id              String         @id @default(cuid())
+  programId       String
+  program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  targetSegment   String         // "INACTIFS_40J", "GROS_PANIERS", etc.
+  channel         String         // "PUSH" | "EMAIL" | "INAPP"
+  offerType       String         // "BONUS_POINTS" | "REMISE" | "PRODUIT_OFFERT"
+  offerPayload    Json?
+  status          String         // "BROUILLON" | "PROGRAMMEE" | "TERMINEE"
+  estimatedImpact Json?          // projections (fake mais cohérentes)
+  stats           Json?          // { sent, opened, clicked, conversions, extraRevenue }
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
