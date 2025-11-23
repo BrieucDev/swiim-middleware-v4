@@ -128,12 +128,17 @@ export async function generateNewTicketsAndClients() {
                 stores = await prisma.store.findMany({ where: { userId: session.user.id } });
             }
         } catch (error) {
-            console.log('Auth check failed, using all stores');
+            console.log('Auth check failed, using all stores:', error);
         }
         
         // If no stores found with userId, get all stores
         if (stores.length === 0) {
-            stores = await prisma.store.findMany();
+            try {
+                stores = await prisma.store.findMany();
+            } catch (error) {
+                console.error('Error fetching stores:', error);
+                return { error: `Error fetching stores: ${error instanceof Error ? error.message : 'Unknown error'}` };
+            }
         }
         
         if (stores.length === 0) {
@@ -141,30 +146,51 @@ export async function generateNewTicketsAndClients() {
         }
 
         // Get existing terminals
-        const terminals = await prisma.posTerminal.findMany({
-            where: { storeId: { in: stores.map(s => s.id) } },
-        });
+        let terminals = [];
+        try {
+            terminals = await prisma.posTerminal.findMany({
+                where: { storeId: { in: stores.map(s => s.id) } },
+            });
+        } catch (error) {
+            console.error('Error fetching terminals:', error);
+            return { error: `Error fetching terminals: ${error instanceof Error ? error.message : 'Unknown error'}` };
+        }
+        
         if (terminals.length === 0) {
             return { error: 'No terminals found. Please create a terminal first.' };
         }
 
         // Get existing customers or create new ones
-        const existingCustomers = await prisma.customer.findMany();
+        let existingCustomers = [];
+        try {
+            existingCustomers = await prisma.customer.findMany();
+        } catch (error) {
+            console.error('Error fetching existing customers:', error);
+            // Continue anyway, we'll create new ones
+        }
         const customers = [...existingCustomers];
 
         // Create 5-10 new customers
         const newCustomersCount = randomInt(5, 10);
+        let createdCustomers = 0;
         for (let i = 0; i < newCustomersCount; i++) {
-            const firstName = randomChoice(firstNames);
-            const lastName = randomChoice(lastNames);
-            const customer = await prisma.customer.create({
-                data: {
-                    firstName,
-                    lastName,
-                    email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${Math.random().toString(36).substring(2, 5)}@swiim.client`,
-                },
-            });
-            customers.push(customer);
+            try {
+                const firstName = randomChoice(firstNames);
+                const lastName = randomChoice(lastNames);
+                const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${Math.random().toString(36).substring(2, 5)}@swiim.client`;
+                const customer = await prisma.customer.create({
+                    data: {
+                        firstName,
+                        lastName,
+                        email,
+                    },
+                });
+                customers.push(customer);
+                createdCustomers++;
+            } catch (error) {
+                console.error(`Error creating customer ${i + 1}:`, error);
+                // Continue with next customer
+            }
         }
 
         // Create 20-30 new receipts
@@ -175,67 +201,83 @@ export async function generateNewTicketsAndClients() {
         const statuses: Array<'EMIS' | 'RECLAME' | 'REMBOURSE' | 'ANNULE'> = ['EMIS', 'RECLAME', 'REMBOURSE', 'ANNULE'];
         const statusWeights = [0.7, 0.15, 0.1, 0.05]; // Most are EMIS
 
+        let createdReceipts = 0;
         for (let i = 0; i < receiptsCount; i++) {
-            const store = randomChoice(stores);
-            const storeTerminals = terminals.filter(t => t.storeId === store.id);
-            if (storeTerminals.length === 0) {
-                // Skip this iteration if no terminals for this store
-                continue;
-            }
-            const terminal = randomChoice(storeTerminals);
-            const customer = Math.random() < 0.8 ? randomChoice(customers) : null;
-            const receiptDate = randomDate(startDate, now);
-            const numItems = randomInt(1, 6);
-            let subtotal = 0;
-            const lineItems = [];
-
-            // Weighted random status
-            const rand = Math.random();
-            let status: 'EMIS' | 'RECLAME' | 'REMBOURSE' | 'ANNULE' = 'EMIS';
-            let cumulative = 0;
-            for (let j = 0; j < statuses.length; j++) {
-                cumulative += statusWeights[j];
-                if (rand <= cumulative) {
-                    status = statuses[j];
-                    break;
+            try {
+                const store = randomChoice(stores);
+                const storeTerminals = terminals.filter(t => t.storeId === store.id);
+                if (storeTerminals.length === 0) {
+                    // Skip this iteration if no terminals for this store
+                    continue;
                 }
-            }
+                const terminal = randomChoice(storeTerminals);
+                const customer = customers.length > 0 && Math.random() < 0.8 ? randomChoice(customers) : null;
+                const receiptDate = randomDate(startDate, now);
+                const numItems = randomInt(1, 6);
+                let subtotal = 0;
+                const lineItems = [];
 
-            for (let j = 0; j < numItems; j++) {
-                const quantity = randomInt(1, 3);
-                const unitPrice = randomFloat(5, 150);
-                lineItems.push({
-                    category: randomChoice(categories),
-                    productName: `Produit ${randomChoice(['Premium', 'Standard', 'Éco', 'Luxe'])} ${randomInt(1, 200)}`,
-                    quantity,
-                    unitPrice,
-                });
-                subtotal += quantity * unitPrice;
-            }
+                // Weighted random status
+                const rand = Math.random();
+                let status: 'EMIS' | 'RECLAME' | 'REMBOURSE' | 'ANNULE' = 'EMIS';
+                let cumulative = 0;
+                for (let j = 0; j < statuses.length; j++) {
+                    cumulative += statusWeights[j];
+                    if (rand <= cumulative) {
+                        status = statuses[j];
+                        break;
+                    }
+                }
 
-            await prisma.receipt.create({
-                data: {
-                    posId: terminal.id,
-                    storeId: store.id,
-                    customerId: customer?.id,
-                    status,
-                    totalAmount: subtotal,
-                    currency: 'EUR',
-                    createdAt: receiptDate,
-                    lineItems: {
-                        create: lineItems,
+                for (let j = 0; j < numItems; j++) {
+                    const quantity = randomInt(1, 3);
+                    const unitPrice = randomFloat(5, 150);
+                    lineItems.push({
+                        category: randomChoice(categories),
+                        productName: `Produit ${randomChoice(['Premium', 'Standard', 'Éco', 'Luxe'])} ${randomInt(1, 200)}`,
+                        quantity,
+                        unitPrice,
+                    });
+                    subtotal += quantity * unitPrice;
+                }
+
+                await prisma.receipt.create({
+                    data: {
+                        posId: terminal.id,
+                        storeId: store.id,
+                        customerId: customer?.id,
+                        status,
+                        totalAmount: subtotal,
+                        currency: 'EUR',
+                        createdAt: receiptDate,
+                        lineItems: {
+                            create: lineItems,
+                        },
                     },
-                },
-            });
+                });
+                createdReceipts++;
+            } catch (error) {
+                console.error(`Error creating receipt ${i + 1}:`, error);
+                // Continue with next receipt
+            }
         }
 
         revalidatePath('/');
         revalidatePath('/tickets');
         revalidatePath('/clients');
         revalidatePath('/accueil');
-        return { success: true, message: `Generated ${newCustomersCount} new customers and ${receiptsCount} new tickets` };
+        
+        if (createdReceipts === 0 && createdCustomers === 0) {
+            return { error: 'No data was created. Please check the console for errors.' };
+        }
+        
+        return { 
+            success: true, 
+            message: `Généré ${createdCustomers} nouveau${createdCustomers > 1 ? 'x' : ''} client${createdCustomers > 1 ? 's' : ''} et ${createdReceipts} nouveau${createdReceipts > 1 ? 'x' : ''} ticket${createdReceipts > 1 ? 's' : ''}` 
+        };
     } catch (error) {
         console.error('Failed to generate new tickets and clients:', error);
-        return { error: 'Failed to generate new tickets and clients' };
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return { error: `Failed to generate new tickets and clients: ${errorMessage}` };
     }
 }
