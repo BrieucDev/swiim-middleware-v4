@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { formatCurrency, formatDateTime, formatReceiptId } from '@/lib/format'
 import { notFound } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 async function getReceipt(id: string) {
   return await prisma.receipt.findUnique({
     where: { id },

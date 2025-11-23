@@ -15,6 +15,8 @@ import { formatCurrency, formatDate, formatReceiptId, maskEmail } from '@/lib/fo
 import Link from 'next/link'
 import { Search } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 async function getReceipts(searchParams: { status?: string; store?: string; query?: string }) {
   const where: any = {}
 

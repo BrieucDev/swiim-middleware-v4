@@ -14,6 +14,8 @@ import { CreateTerminalDialog } from '@/components/tpe/CreateTerminalDialog'
 import { formatDate } from '@/lib/format'
 import { Plus } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 async function getTerminals() {
   return await prisma.posTerminal.findMany({
     include: {

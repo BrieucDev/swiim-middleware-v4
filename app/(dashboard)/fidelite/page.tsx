@@ -19,6 +19,8 @@ import { CampaignCreator } from '@/components/fidelite/CampaignCreator'
 import { ImpactSimulator } from '@/components/fidelite/ImpactSimulator'
 import { Pencil } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 async function getTopLoyalCustomers() {
   const accounts = await prisma.loyaltyAccount.findMany({
     include: {

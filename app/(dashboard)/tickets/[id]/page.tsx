@@ -16,6 +16,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Printer, RefreshCw } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 async function getReceipt(id: string) {
   return await prisma.receipt.findUnique({
     where: { id },

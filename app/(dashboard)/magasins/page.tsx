@@ -12,6 +12,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
+export const dynamic = 'force-dynamic'
+
 async function getStoresWithStats() {
   const stores = await prisma.store.findMany({
     include: {

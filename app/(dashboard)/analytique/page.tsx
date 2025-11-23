@@ -6,6 +6,8 @@ import { formatCurrency } from '@/lib/format'
 import { stats, segments, categoryAnalytics } from '@/lib/mock-data'
 import { ShoppingBag, CreditCard, TrendingUp, Users, Leaf, TreeDeciduous, Scale, FileText } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function AnalytiquePage() {
   return (
     <div className="space-y-10">

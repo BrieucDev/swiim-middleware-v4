@@ -14,6 +14,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
+export const dynamic = 'force-dynamic'
+
 async function getCustomer(id: string) {
   const customer = await prisma.customer.findUnique({
     where: { id },

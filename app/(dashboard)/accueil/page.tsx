@@ -6,6 +6,8 @@ import { TicketsChart } from '@/components/dashboard/tickets-chart'
 import { RevenueChart } from '@/components/dashboard/revenue-chart'
 import { StoresChart } from '@/components/dashboard/stores-chart'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AccueilPage() {
   // Temporarily using mock data to fix build error
   const stats = {
