@@ -1,2 +1,17 @@
-import { auth } from '@/auth'; // Import auth to ensure it's initialized if needed, though handlers are exported from NextAuth
-export { GET, POST } from '@/auth'; // This might need adjustment based on NextAuth v5 export structure
+import { NextRequest } from 'next/server';
+
+// For NextAuth v5 beta with App Router, we create simple handlers
+// This is a placeholder since authentication is not fully implemented
+export async function GET(request: NextRequest) {
+    return new Response(
+        JSON.stringify({ message: 'NextAuth endpoint - GET' }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+}
+
+export async function POST(request: NextRequest) {
+    return new Response(
+        JSON.stringify({ message: 'NextAuth endpoint - POST' }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+}
