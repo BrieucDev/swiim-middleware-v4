@@ -1,9 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatCurrency, formatDate } from '@/lib/format'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts'
+import { formatCurrency } from '@/lib/format'
 import { KpiCard } from '@/components/dashboard/kpi-card'
 import { ChartCard } from '@/components/dashboard/chart-card'
 import { SectionHeader } from '@/components/dashboard/section-header'
+import { TicketsChart } from '@/components/dashboard/tickets-chart'
+import { RevenueChart } from '@/components/dashboard/revenue-chart'
+import { StoresChart } from '@/components/dashboard/stores-chart'
 
 export default async function AccueilPage() {
   // Temporarily using mock data to fix build error
@@ -89,84 +90,18 @@ export default async function AccueilPage() {
       <SectionHeader title="Tendances" />
       <div className="grid gap-6 md:grid-cols-2">
         <ChartCard title="Tickets par jour" description="Évolution sur 30 jours">
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#C7FF06" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#C7FF06" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
-              <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
-              <YAxis stroke="#6B7280" fontSize={12} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #E5E7EB', 
-                  borderRadius: '8px',
-                  padding: '8px 12px'
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="count" 
-                stroke="#C7FF06" 
-                strokeWidth={2}
-                fill="url(#colorCount)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <TicketsChart data={chartData} />
         </ChartCard>
 
         <ChartCard title="CA par jour" description="Évolution sur 30 jours">
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
-              <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
-              <YAxis stroke="#6B7280" fontSize={12} />
-              <Tooltip 
-                formatter={(value: number) => formatCurrency(value)}
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #E5E7EB', 
-                  borderRadius: '8px',
-                  padding: '8px 12px'
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="#C7FF06" 
-                strokeWidth={2}
-                dot={{ fill: '#C7FF06', r: 3 }}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <RevenueChart data={chartData} />
         </ChartCard>
       </div>
 
       {/* Performance magasins */}
       <SectionHeader title="Performance magasins" />
       <ChartCard title="Répartition par magasin" description="Chiffre d&apos;affaires sur 30 jours">
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={storePerformance}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
-            <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} stroke="#6B7280" fontSize={12} />
-            <YAxis stroke="#6B7280" fontSize={12} />
-            <Tooltip 
-              formatter={(value: number) => formatCurrency(value)}
-              contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #E5E7EB', 
-                borderRadius: '8px',
-                padding: '8px 12px'
-              }}
-            />
-            <Bar dataKey="revenue" fill="#C7FF06" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <StoresChart data={storePerformance} />
       </ChartCard>
 
       {/* Top et bottom stores */}
