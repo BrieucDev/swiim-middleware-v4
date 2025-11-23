@@ -49,7 +49,10 @@ async function getStore(id: string) {
     const averageBasket = count > 0 ? revenue / count : 0
 
     // Top category
-    let allReceipts = []
+    let allReceipts: Array<{
+      id: string
+      lineItems: Array<{ category: string }>
+    }> = []
     try {
       allReceipts = await prisma.receipt.findMany({
         where: {
