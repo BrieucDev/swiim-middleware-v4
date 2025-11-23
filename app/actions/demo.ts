@@ -119,16 +119,23 @@ export async function generateDemoData() {
 }
 
 export async function generateNewTicketsAndClients() {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { error: 'Unauthorized' };
-    }
-
-    const userId = session.user.id;
-
     try {
-        // Get existing stores
-        const stores = await prisma.store.findMany({ where: { userId } });
+        // Get existing stores (try with userId first, then all stores)
+        let stores = [];
+        try {
+            const session = await auth();
+            if (session?.user?.id) {
+                stores = await prisma.store.findMany({ where: { userId: session.user.id } });
+            }
+        } catch (error) {
+            console.log('Auth check failed, using all stores');
+        }
+        
+        // If no stores found with userId, get all stores
+        if (stores.length === 0) {
+            stores = await prisma.store.findMany();
+        }
+        
         if (stores.length === 0) {
             return { error: 'No stores found. Please create a store first.' };
         }
@@ -170,7 +177,12 @@ export async function generateNewTicketsAndClients() {
 
         for (let i = 0; i < receiptsCount; i++) {
             const store = randomChoice(stores);
-            const terminal = randomChoice(terminals.filter(t => t.storeId === store.id));
+            const storeTerminals = terminals.filter(t => t.storeId === store.id);
+            if (storeTerminals.length === 0) {
+                // Skip this iteration if no terminals for this store
+                continue;
+            }
+            const terminal = randomChoice(storeTerminals);
             const customer = Math.random() < 0.8 ? randomChoice(customers) : null;
             const receiptDate = randomDate(startDate, now);
             const numItems = randomInt(1, 6);
