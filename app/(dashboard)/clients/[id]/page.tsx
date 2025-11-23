@@ -107,6 +107,10 @@ async function getCustomer(id: string) {
       segments,
     },
   }
+  } catch (error) {
+    console.error('Error fetching customer:', error)
+    return null
+  }
 }
 
 export default async function ClientDetailPage({
