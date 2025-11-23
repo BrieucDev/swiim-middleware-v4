@@ -41,49 +41,55 @@ async function getStore(id: string) {
     },
   })
 
-  if (!store) return null
+    if (!store) return null
 
-  const receipts = store.receipts
-  const revenue = receipts.reduce((sum, r) => sum + Number(r.totalAmount), 0)
-  const count = receipts.length
-  const averageBasket = count > 0 ? revenue / count : 0
+    const receipts = store.receipts
+    const revenue = receipts.reduce((sum, r) => sum + Number(r.totalAmount), 0)
+    const count = receipts.length
+    const averageBasket = count > 0 ? revenue / count : 0
 
-  // Top category
-  const allReceipts = await prisma.receipt.findMany({
-    where: {
-      storeId: store.id,
-      createdAt: {
-        gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    // Top category
+    let allReceipts = []
+    try {
+      allReceipts = await prisma.receipt.findMany({
+        where: {
+          storeId: store.id,
+          createdAt: {
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          },
+        },
+        include: {
+          lineItems: true,
+        },
+      })
+    } catch (error) {
+      console.error('Error fetching receipts for category analysis:', error)
+    }
+
+    const categoryCounts = new Map<string, number>()
+    allReceipts.forEach((r) => {
+      r.lineItems.forEach((item) => {
+        categoryCounts.set(item.category, (categoryCounts.get(item.category) || 0) + 1)
+      })
+    })
+
+    const topCategory =
+      categoryCounts.size > 0
+        ? Array.from(categoryCounts.entries()).sort((a, b) => b[1] - a[1])[0][0]
+        : null
+
+    return {
+      ...store,
+      stats: {
+        revenue,
+        count,
+        averageBasket,
+        topCategory,
       },
-    },
-    include: {
-      lineItems: true,
-    },
-    })
+    }
   } catch (error) {
-    console.error('Error fetching receipts for category analysis:', error)
-  }
-
-  const categoryCounts = new Map<string, number>()
-  allReceipts.forEach((r) => {
-    r.lineItems.forEach((item) => {
-      categoryCounts.set(item.category, (categoryCounts.get(item.category) || 0) + 1)
-    })
-  })
-
-  const topCategory =
-    categoryCounts.size > 0
-      ? Array.from(categoryCounts.entries()).sort((a, b) => b[1] - a[1])[0][0]
-      : null
-
-  return {
-    ...store,
-    stats: {
-      revenue,
-      count,
-      averageBasket,
-      topCategory,
-    },
+    console.error('Error fetching store:', error)
+    return null
   }
 }
 
