@@ -15,10 +15,10 @@ export function Header({ stores }: { stores: Array<{ id: string; name: string }>
   const [selectedStore, setSelectedStore] = useState<string>('all')
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-100 bg-white/90 backdrop-blur-sm px-8">
       <div className="flex items-center gap-4">
         <Select value={selectedStore} onValueChange={setSelectedStore}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] rounded-full border-gray-200 bg-white">
             <SelectValue placeholder="Tous les magasins" />
           </SelectTrigger>
           <SelectContent>
@@ -33,11 +33,10 @@ export function Header({ stores }: { stores: Array<{ id: string; name: string }>
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <div className="text-sm font-medium">Admin Swiim</div>
-          <div className="text-xs text-muted-foreground">Pilote enseigne</div>
+          <div className="text-sm font-medium text-gray-900">Admin Swiim</div>
         </div>
-        <Avatar>
-          <AvatarFallback>AS</AvatarFallback>
+        <Avatar className="h-8 w-8">
+          <AvatarFallback className="bg-gray-900 text-white text-xs">AS</AvatarFallback>
         </Avatar>
       </div>
     </header>

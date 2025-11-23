@@ -8,11 +8,11 @@ import { ShoppingBag, CreditCard, TrendingUp, Users, Leaf, TreeDeciduous, Scale,
 
 export default function AnalytiquePage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Analytique</h1>
-          <p className="text-gray-500 mt-2 text-lg">
+          <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Analytique</h1>
+          <p className="text-sm text-gray-500 mt-2">
             Analyses et insights business
           </p>
         </div>
@@ -48,20 +48,20 @@ export default function AnalytiquePage() {
       </div>
 
       {/* Segments */}
-      <Card className="border-none shadow-premium">
-        <CardHeader>
-          <CardTitle>Segments de clients</CardTitle>
-          <CardDescription>Classification et analyse comportementale</CardDescription>
+      <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+        <CardHeader className="px-6 pt-6">
+          <CardTitle className="text-base font-semibold text-gray-900">Segments de clients</CardTitle>
+          <CardDescription className="text-sm text-gray-500">Classification et analyse comportementale</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {segments.map((segment) => (
               <div key={segment.name} className="p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="text-lg font-bold text-gray-900 mb-4">{segment.name}</div>
+                <div className="text-lg font-semibold text-gray-900 mb-4">{segment.name}</div>
                 <div className="space-y-4">
                   <div>
-                    <div className="text-sm text-gray-500 mb-1">Taille du segment</div>
-                    <div className="text-2xl font-bold text-gray-900">{segment.size}</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Taille du segment</div>
+                    <div className="text-2xl font-semibold text-gray-900">{segment.size}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
                     <div>
@@ -83,10 +83,10 @@ export default function AnalytiquePage() {
       </Card>
 
       {/* Category Analytics */}
-      <Card className="border-none shadow-premium">
-        <CardHeader>
-          <CardTitle>Analyse comportementale par catégorie</CardTitle>
-          <CardDescription>Performances et tendances par catégorie</CardDescription>
+      <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+        <CardHeader className="px-6 pt-6 bg-gray-50/50 border-b border-gray-100">
+          <CardTitle className="text-base font-semibold text-gray-900">Analyse comportementale par catégorie</CardTitle>
+          <CardDescription className="text-sm text-gray-500">Performances et tendances par catégorie</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -104,8 +104,8 @@ export default function AnalytiquePage() {
             <TableBody>
               {categoryAnalytics.map((cat) => (
                 <TableRow key={cat.name} className="hover:bg-gray-50/50 border-gray-50 transition-colors">
-                  <TableCell className="font-medium text-gray-900 pl-6">{cat.name}</TableCell>
-                  <TableCell className="text-right font-bold text-gray-900">{formatCurrency(cat.revenue)}</TableCell>
+                  <TableCell className="font-semibold text-gray-900 pl-6">{cat.name}</TableCell>
+                  <TableCell className="text-right font-semibold text-gray-900">{formatCurrency(cat.revenue)}</TableCell>
                   <TableCell className="text-right text-gray-600">{formatCurrency(cat.avgBasket)}</TableCell>
                   <TableCell className="text-right text-gray-600">{cat.tickets}</TableCell>
                   <TableCell className="text-right text-gray-600">{cat.daysBetween}</TableCell>
@@ -119,46 +119,46 @@ export default function AnalytiquePage() {
       </Card>
 
       {/* Environmental Impact */}
-      <Card className="border-none shadow-premium bg-gradient-to-br from-emerald-900 to-emerald-800 text-white">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+      <Card className="bg-gradient-to-br from-emerald-900 to-emerald-800 text-white rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)] border border-emerald-800">
+        <CardHeader className="px-6 pt-6">
+          <CardTitle className="text-white flex items-center gap-2 text-base font-semibold">
             <Leaf className="h-5 w-5 text-emerald-400" />
             Impact environnemental
           </CardTitle>
-          <CardDescription className="text-emerald-200">
+          <CardDescription className="text-emerald-200 text-sm">
             Économies générées par les tickets numériques
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-              <div className="flex items-center gap-2 text-emerald-200 text-sm mb-2">
+              <div className="flex items-center gap-2 text-emerald-200 text-xs uppercase tracking-[0.14em] mb-2">
                 <FileText className="h-4 w-4" />
                 Tickets numériques
               </div>
-              <div className="text-3xl font-bold">15,234</div>
+              <div className="text-3xl font-semibold">15,234</div>
               <div className="text-xs text-emerald-300 mt-1">Sur 12 mois</div>
             </div>
             <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-              <div className="flex items-center gap-2 text-emerald-200 text-sm mb-2">
+              <div className="flex items-center gap-2 text-emerald-200 text-xs uppercase tracking-[0.14em] mb-2">
                 <Scale className="h-4 w-4" />
                 Papier économisé
               </div>
-              <div className="text-3xl font-bold">45.70 kg</div>
+              <div className="text-3xl font-semibold">45.70 kg</div>
             </div>
             <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-              <div className="flex items-center gap-2 text-emerald-200 text-sm mb-2">
+              <div className="flex items-center gap-2 text-emerald-200 text-xs uppercase tracking-[0.14em] mb-2">
                 <Leaf className="h-4 w-4" />
                 CO₂ évité
               </div>
-              <div className="text-3xl font-bold">36.56 kg</div>
+              <div className="text-3xl font-semibold">36.56 kg</div>
             </div>
             <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-              <div className="flex items-center gap-2 text-emerald-200 text-sm mb-2">
+              <div className="flex items-center gap-2 text-emerald-200 text-xs uppercase tracking-[0.14em] mb-2">
                 <TreeDeciduous className="h-4 w-4" />
                 Arbres équivalents
               </div>
-              <div className="text-3xl font-bold">4.57</div>
+              <div className="text-3xl font-semibold">4.57</div>
             </div>
           </div>
         </CardContent>

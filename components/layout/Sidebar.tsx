@@ -29,10 +29,10 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-background">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-gray-100 bg-white/90 backdrop-blur-sm">
       <div className="flex h-full flex-col">
-        <div className="flex h-16 items-center border-b px-6">
-          <Link href="/accueil" className="text-xl font-bold">
+        <div className="flex h-16 items-center border-b border-gray-100 px-6">
+          <Link href="/accueil" className="text-xl font-bold text-gray-900">
             SWIIM
           </Link>
         </div>
@@ -45,13 +45,13 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                    ? 'bg-gray-900 text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={cn('h-5 w-5', isActive && 'text-white')} />
                 {item.label}
               </Link>
             )

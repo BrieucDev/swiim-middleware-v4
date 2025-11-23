@@ -124,59 +124,59 @@ export default async function FidelitePage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <h1 className="text-3xl font-bold">Fidélité</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Fidélité</h1>
+        <p className="text-sm text-gray-500 mt-2">
           Gestion du programme de fidélité et campagnes
         </p>
       </div>
 
       {/* Overview KPIs */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Membres</CardTitle>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Membres</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalMembers.toLocaleString('fr-FR')}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="px-6 pb-6">
+            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{stats.totalMembers.toLocaleString('fr-FR')}</div>
+            <p className="text-xs text-gray-400 mt-2">
               Membres actifs
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Points en circulation</CardTitle>
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Points en circulation</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pointsInCirculation.toLocaleString('fr-FR')}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="px-6 pb-6">
+            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{stats.pointsInCirculation.toLocaleString('fr-FR')}</div>
+            <p className="text-xs text-gray-400 mt-2">
               Points non utilisés
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taux d&apos;engagement</CardTitle>
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Taux d&apos;engagement</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.engagementRate.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="px-6 pb-6">
+            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{stats.engagementRate.toFixed(1)}%</div>
+            <p className="text-xs text-gray-400 mt-2">
               Activité 60 derniers jours
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">CA généré (30j)</CardTitle>
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">CA généré (30j)</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.loyaltyRevenue)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="px-6 pb-6">
+            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{formatCurrency(stats.loyaltyRevenue)}</div>
+            <p className="text-xs text-gray-400 mt-2">
               Clients fidélisés
             </p>
           </CardContent>
@@ -194,24 +194,24 @@ export default async function FidelitePage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribution des niveaux</CardTitle>
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+              <CardHeader className="px-6 pt-6">
+                <CardTitle className="text-base font-semibold text-gray-900">Distribution des niveaux</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="px-6 pb-6">
+                <div className="space-y-6">
                   {stats.tierDistribution.map((tier) => (
                     <div key={tier.tier} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="font-medium">{tier.tier}</div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="font-semibold text-gray-900">{tier.tier}</div>
+                        <div className="text-sm text-gray-500">
                           {tier.count} membres
                         </div>
                       </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-accent"
+                          className="h-full bg-[#C7FF06]"
                           style={{
                             width: `${(tier.count / stats.totalMembers) * 100}%`,
                           }}
@@ -223,22 +223,22 @@ export default async function FidelitePage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Statistiques</CardTitle>
+            <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+              <CardHeader className="px-6 pt-6">
+                <CardTitle className="text-base font-semibold text-gray-900">Statistiques</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Points totaux</span>
-                  <span className="font-medium">{stats.totalPoints.toLocaleString('fr-FR')}</span>
+              <CardContent className="px-6 pb-6 space-y-4">
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500">Points totaux</span>
+                  <span className="font-semibold text-gray-900">{stats.totalPoints.toLocaleString('fr-FR')}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Points utilisés</span>
-                  <span className="font-medium">{stats.pointsUsed.toLocaleString('fr-FR')}</span>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500">Points utilisés</span>
+                  <span className="font-semibold text-gray-900">{stats.pointsUsed.toLocaleString('fr-FR')}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total dépensé</span>
-                  <span className="font-medium">{formatCurrency(stats.program.accounts.reduce((sum, a) => sum + a.totalSpend, 0))}</span>
+                <div className="flex justify-between py-2">
+                  <span className="text-gray-500">Total dépensé</span>
+                  <span className="font-semibold text-gray-900">{formatCurrency(stats.program.accounts.reduce((sum, a) => sum + a.totalSpend, 0))}</span>
                 </div>
               </CardContent>
             </Card>
@@ -246,45 +246,45 @@ export default async function FidelitePage() {
         </TabsContent>
 
         <TabsContent value="program" className="space-y-4">
-          <Card>
-            <CardHeader>
+          <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+            <CardHeader className="px-6 pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Règles du programme</CardTitle>
-                  <CardDescription>{stats.program.name}</CardDescription>
+                  <CardTitle className="text-base font-semibold text-gray-900">Règles du programme</CardTitle>
+                  <CardDescription className="text-sm text-gray-500">{stats.program.name}</CardDescription>
                 </div>
                 <LoyaltyProgramEditor program={stats.program} />
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+            <CardContent className="px-6 pb-6 space-y-4">
+              <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <div className="text-sm text-muted-foreground">Points par euro</div>
-                  <div className="text-2xl font-bold">{stats.program.pointsPerEuro} point</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Points par euro</div>
+                  <div className="text-2xl md:text-3xl font-semibold text-gray-900">{stats.program.pointsPerEuro} point</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Conversion</div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Conversion</div>
+                  <div className="text-2xl md:text-3xl font-semibold text-gray-900">
                     {stats.program.conversionRate} points = {formatCurrency(stats.program.conversionValue)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Bonus catégories</div>
-                  <div className="mt-1">
+                  <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-2">Bonus catégories</div>
+                  <div>
                     {stats.program.bonusCategories ? (
                       Object.entries(stats.program.bonusCategories as Record<string, number>).map(([cat, mult]) => (
-                        <Badge key={cat} variant="outline" className="mr-2">
+                        <Badge key={cat} variant="outline" className="mr-2 rounded-full border-gray-200">
                           {cat}: x{mult}
                         </Badge>
                       ))
                     ) : (
-                      <span className="text-muted-foreground">Aucun</span>
+                      <span className="text-gray-400">Aucun</span>
                     )}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Expiration des points</div>
-                  <div className="text-lg font-medium">
+                  <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Expiration des points</div>
+                  <div className="text-lg font-semibold text-gray-900">
                     {stats.program.pointsExpiryDays ? `${stats.program.pointsExpiryDays / 30} mois` : 'Aucune'}
                   </div>
                 </div>
@@ -294,7 +294,7 @@ export default async function FidelitePage() {
         </TabsContent>
 
         <TabsContent value="tiers" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             {stats.tierDistribution.map((tierInfo) => {
               const tier = stats.program.tiers.find(t => t.name === tierInfo.tier)
               if (!tier) return null
@@ -302,26 +302,26 @@ export default async function FidelitePage() {
               const benefits = tier.benefits as Record<string, any> || {}
 
               return (
-                <Card key={tier.id}>
-                  <CardHeader>
-                    <CardTitle>{tier.name}</CardTitle>
-                    <CardDescription>
+                <Card key={tier.id} className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+                  <CardHeader className="px-6 pt-6">
+                    <CardTitle className="text-base font-semibold text-gray-900">{tier.name}</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">
                       {formatCurrency(tier.minSpend)}
                       {tier.maxSpend && ` - ${formatCurrency(tier.maxSpend)}`}
                       {!tier.maxSpend && '+'}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="px-6 pb-6 space-y-4">
                     <div>
-                      <div className="text-sm text-muted-foreground">Membres</div>
-                      <div className="text-2xl font-bold">{tierInfo.count}</div>
+                      <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Membres</div>
+                      <div className="text-2xl md:text-3xl font-semibold text-gray-900">{tierInfo.count}</div>
                     </div>
                     {Object.keys(benefits).length > 0 && (
                       <div>
-                        <div className="text-sm text-muted-foreground mb-2">Avantages</div>
+                        <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-2">Avantages</div>
                         <ul className="text-sm space-y-1">
                           {Object.entries(benefits).map(([key, value]) => (
-                            <li key={key} className="text-muted-foreground">
+                            <li key={key} className="text-gray-600">
                               • {key}: {typeof value === 'string' ? value : JSON.stringify(value)}
                             </li>
                           ))}
@@ -336,49 +336,49 @@ export default async function FidelitePage() {
         </TabsContent>
 
         <TabsContent value="customers" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top clients fidèles</CardTitle>
-              <CardDescription>Clients les plus engagés</CardDescription>
+          <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+            <CardHeader className="px-6 pt-6 bg-gray-50/50 border-b border-gray-100">
+              <CardTitle className="text-base font-semibold text-gray-900">Top clients fidèles</CardTitle>
+              <CardDescription className="text-sm text-gray-500">Clients les plus engagés</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Niveau</TableHead>
-                    <TableHead className="text-right">Points</TableHead>
-                    <TableHead className="text-right">Total dépensé</TableHead>
-                    <TableHead className="text-right">Fréquence</TableHead>
-                    <TableHead>Catégories</TableHead>
+                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-100">
+                    <TableHead className="font-semibold text-gray-600 pl-6">Client</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Email</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Niveau</TableHead>
+                    <TableHead className="text-right font-semibold text-gray-600">Points</TableHead>
+                    <TableHead className="text-right font-semibold text-gray-600">Total dépensé</TableHead>
+                    <TableHead className="text-right font-semibold text-gray-600">Fréquence</TableHead>
+                    <TableHead className="font-semibold text-gray-600 pr-6">Catégories</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {topCustomers.map((customer) => (
-                    <TableRow key={customer.id}>
-                      <TableCell className="font-medium">{customer.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                    <TableRow key={customer.id} className="hover:bg-gray-50/50 border-gray-50 transition-colors">
+                      <TableCell className="font-semibold text-gray-900 pl-6">{customer.name}</TableCell>
+                      <TableCell className="text-sm text-gray-600">
                         {customer.email}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={customer.tier === 'Or' ? 'warning' : customer.tier === 'Argent' ? 'default' : 'secondary'}>
+                        <Badge variant={customer.tier === 'Or' ? 'warning' : customer.tier === 'Argent' ? 'default' : 'secondary'} className="rounded-full">
                           {customer.tier}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right font-semibold text-gray-900">
                         {customer.points.toLocaleString('fr-FR')}
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right font-semibold text-gray-900">
                         {formatCurrency(customer.totalSpend)}
                       </TableCell>
-                      <TableCell className="text-right text-sm text-muted-foreground">
+                      <TableCell className="text-right text-sm text-gray-600">
                         {customer.frequency > 0 ? `${customer.frequency.toFixed(0)} jours` : '-'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="pr-6">
                         <div className="flex flex-wrap gap-1">
                           {customer.topCategories.map((cat) => (
-                            <Badge key={cat} variant="outline" className="text-xs">
+                            <Badge key={cat} variant="outline" className="text-xs rounded-full border-gray-200">
                               {cat}
                             </Badge>
                           ))}
@@ -395,35 +395,35 @@ export default async function FidelitePage() {
         <TabsContent value="campaigns" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold">Campagnes</h2>
-              <p className="text-muted-foreground">
+              <h2 className="text-2xl md:text-3xl font-semibold text-gray-900">Campagnes</h2>
+              <p className="text-sm text-gray-500 mt-2">
                 Gestion des campagnes marketing et promotions
               </p>
             </div>
             <CampaignCreator programId={stats.program.id} />
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Liste des campagnes</CardTitle>
+          <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+            <CardHeader className="px-6 pt-6 bg-gray-50/50 border-b border-gray-100">
+              <CardTitle className="text-base font-semibold text-gray-900">Liste des campagnes</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Segment</TableHead>
-                    <TableHead>Canal</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Ouverture</TableHead>
-                    <TableHead className="text-right">Conversion</TableHead>
-                    <TableHead className="text-right">CA généré</TableHead>
+                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-100">
+                    <TableHead className="font-semibold text-gray-600 pl-6">Nom</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Segment</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Canal</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Statut</TableHead>
+                    <TableHead className="text-right font-semibold text-gray-600">Ouverture</TableHead>
+                    <TableHead className="text-right font-semibold text-gray-600">Conversion</TableHead>
+                    <TableHead className="text-right font-semibold text-gray-600 pr-6">CA généré</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {campaigns.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center text-gray-400 py-8">
                         Aucune campagne
                       </TableCell>
                     </TableRow>
@@ -438,28 +438,26 @@ export default async function FidelitePage() {
                       const conversionRate = sent > 0 ? (conversions / sent) * 100 : 0
 
                       return (
-                        <TableRow key={campaign.id}>
-                          <TableCell className="font-medium">{campaign.name}</TableCell>
+                        <TableRow key={campaign.id} className="hover:bg-gray-50/50 border-gray-50 transition-colors">
+                          <TableCell className="font-semibold text-gray-900 pl-6">{campaign.name}</TableCell>
                           <TableCell>
-                            <Badge variant="outline">{campaign.targetSegment}</Badge>
+                            <Badge variant="outline" className="rounded-full border-gray-200">{campaign.targetSegment}</Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={getChannelBadge(campaign.channel)}>
+                            <Badge variant={getChannelBadge(campaign.channel)} className="rounded-full">
                               {campaign.channel}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={getStatusBadge(campaign.status)}>
-                              {campaign.status}
-                            </Badge>
+                            <StatusBadge status={campaign.status} />
                           </TableCell>
-                          <TableCell className="text-right text-sm">
+                          <TableCell className="text-right text-sm text-gray-600">
                             {openRate.toFixed(1)}%
                           </TableCell>
-                          <TableCell className="text-right text-sm">
+                          <TableCell className="text-right text-sm text-gray-600">
                             {conversionRate.toFixed(1)}%
                           </TableCell>
-                          <TableCell className="text-right font-medium">
+                          <TableCell className="text-right font-semibold text-gray-900 pr-6">
                             {formatCurrency(stats.extraRevenue || 0)}
                           </TableCell>
                         </TableRow>

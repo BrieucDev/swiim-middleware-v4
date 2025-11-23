@@ -115,40 +115,44 @@ export default async function ClientDetailPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
           {customer.firstName} {customer.lastName}
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-sm text-gray-500 mt-2">
           Profil et historique du client
         </p>
       </div>
 
-      {/* Profile Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Profil</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <div className="text-sm text-muted-foreground">Nom</div>
-              <div className="font-medium">
-                {customer.firstName} {customer.lastName}
+      {/* Hero Card */}
+      <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+        <CardContent className="px-6 pt-6 pb-6">
+          <div className="flex items-start gap-6">
+            <div className="flex-shrink-0">
+              <div className="h-20 w-20 rounded-full bg-gray-900 flex items-center justify-center text-white text-2xl font-semibold">
+                {customer.firstName[0]}{customer.lastName[0]}
               </div>
             </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Email</div>
-              <div className="font-medium">{maskEmail(customer.email)}</div>
-            </div>
-            {customer.stats.mainStore && (
+            <div className="flex-1 grid gap-6 md:grid-cols-2">
               <div>
-                <div className="text-sm text-muted-foreground">Magasin principal</div>
-                <div className="font-medium">{customer.stats.mainStore}</div>
+                <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Nom</div>
+                <div className="font-semibold text-gray-900 text-lg">
+                  {customer.firstName} {customer.lastName}
+                </div>
               </div>
-            )}
-            <div>
-              <div className="text-sm text-muted-foreground">Membre depuis</div>
-              <div className="font-medium">{formatDate(customer.createdAt)}</div>
+              <div>
+                <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Email</div>
+                <div className="font-semibold text-gray-900">{maskEmail(customer.email)}</div>
+              </div>
+              {customer.stats.mainStore && (
+                <div>
+                  <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Magasin principal</div>
+                  <div className="font-semibold text-gray-900">{customer.stats.mainStore}</div>
+                </div>
+              )}
+              <div>
+                <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Membre depuis</div>
+                <div className="font-semibold text-gray-900">{formatDate(customer.createdAt)}</div>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -156,41 +160,40 @@ export default async function ClientDetailPage({
 
       {/* Loyalty Account */}
       {customer.loyaltyAccount && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Fidélité</CardTitle>
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="text-base font-semibold text-gray-900">Fidélité</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <CardContent className="px-6 pb-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               <div>
-                <div className="text-sm text-muted-foreground">Niveau</div>
-                <div className="mt-1">
-                  <Badge
-                    variant={
-                      customer.loyaltyAccount.tier?.name === 'Or'
-                        ? 'warning'
-                        : customer.loyaltyAccount.tier?.name === 'Argent'
-                        ? 'default'
-                        : 'secondary'
-                    }
-                  >
-                    {customer.loyaltyAccount.tier?.name || 'Non classé'}
-                  </Badge>
-                </div>
+                <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-2">Niveau</div>
+                <Badge
+                  variant={
+                    customer.loyaltyAccount.tier?.name === 'Or'
+                      ? 'warning'
+                      : customer.loyaltyAccount.tier?.name === 'Argent'
+                      ? 'default'
+                      : 'secondary'
+                  }
+                  className="rounded-full"
+                >
+                  {customer.loyaltyAccount.tier?.name || 'Non classé'}
+                </Badge>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Points</div>
-                <div className="text-2xl font-bold">{customer.loyaltyAccount.points}</div>
+                <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Points</div>
+                <div className="text-2xl md:text-3xl font-semibold text-gray-900">{customer.loyaltyAccount.points}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Total dépensé</div>
-                <div className="text-2xl font-bold">
+                <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Total dépensé</div>
+                <div className="text-2xl md:text-3xl font-semibold text-gray-900">
                   {formatCurrency(customer.loyaltyAccount.totalSpend)}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Dernière activité</div>
-                <div className="font-medium">
+                <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-1">Dernière activité</div>
+                <div className="font-semibold text-gray-900">
                   {customer.loyaltyAccount.lastActivity
                     ? formatDate(customer.loyaltyAccount.lastActivity)
                     : '-'}
@@ -202,31 +205,31 @@ export default async function ClientDetailPage({
       )}
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total dépensé</CardTitle>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Total dépensé</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(customer.stats.totalSpend)}</div>
+          <CardContent className="px-6 pb-6">
+            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{formatCurrency(customer.stats.totalSpend)}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nombre de visites</CardTitle>
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Nombre de visites</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{customer.stats.visits}</div>
+          <CardContent className="px-6 pb-6">
+            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{customer.stats.visits}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fréquence moyenne</CardTitle>
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Fréquence moyenne</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-6 pb-6">
+            <div className="text-2xl md:text-3xl font-semibold text-gray-900">
               {customer.stats.avgDaysBetweenVisits > 0
                 ? `${customer.stats.avgDaysBetweenVisits.toFixed(0)} jours`
                 : '-'}
@@ -234,12 +237,12 @@ export default async function ClientDetailPage({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Panier moyen</CardTitle>
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Panier moyen</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-6 pb-6">
+            <div className="text-2xl md:text-3xl font-semibold text-gray-900">
               {customer.stats.visits > 0
                 ? formatCurrency(customer.stats.totalSpend / customer.stats.visits)
                 : '-'}
@@ -250,15 +253,15 @@ export default async function ClientDetailPage({
 
       {/* Segments */}
       {customer.stats.segments.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Segments</CardTitle>
-            <CardDescription>Classification du client</CardDescription>
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="text-base font-semibold text-gray-900">Segments</CardTitle>
+            <CardDescription className="text-sm text-gray-500">Classification du client</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-6 pb-6">
             <div className="flex flex-wrap gap-2">
               {customer.stats.segments.map((segment) => (
-                <Badge key={segment} variant="outline">
+                <Badge key={segment} variant="outline" className="rounded-full border-gray-200">
                   {segment}
                 </Badge>
               ))}
@@ -269,15 +272,15 @@ export default async function ClientDetailPage({
 
       {/* Top Categories */}
       {customer.stats.topCategories.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Catégories principales</CardTitle>
-            <CardDescription>Catégories les plus achetées</CardDescription>
+        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="text-base font-semibold text-gray-900">Catégories principales</CardTitle>
+            <CardDescription className="text-sm text-gray-500">Catégories les plus achetées</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-6 pb-6">
             <div className="flex flex-wrap gap-2">
               {customer.stats.topCategories.map((category) => (
-                <Badge key={category} variant="secondary">
+                <Badge key={category} variant="secondary" className="rounded-full">
                   {category}
                 </Badge>
               ))}
@@ -287,47 +290,45 @@ export default async function ClientDetailPage({
       )}
 
       {/* Receipts Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Historique des tickets</CardTitle>
-          <CardDescription>Derniers tickets du client</CardDescription>
+      <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+        <CardHeader className="px-6 pt-6 bg-gray-50/50 border-b border-gray-100">
+          <CardTitle className="text-base font-semibold text-gray-900">Historique des tickets</CardTitle>
+          <CardDescription className="text-sm text-gray-500">Derniers tickets du client</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Référence</TableHead>
-                <TableHead>Magasin</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Montant</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-100">
+                <TableHead className="font-semibold text-gray-600 pl-6">Référence</TableHead>
+                <TableHead className="font-semibold text-gray-600">Magasin</TableHead>
+                <TableHead className="font-semibold text-gray-600">Date</TableHead>
+                <TableHead className="text-right font-semibold text-gray-600">Montant</TableHead>
+                <TableHead className="text-right font-semibold text-gray-600 pr-6">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {customer.receipts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center text-gray-400 py-8">
                     Aucun ticket
                   </TableCell>
                 </TableRow>
               ) : (
                 customer.receipts.map((receipt) => (
-                  <TableRow key={receipt.id}>
-                    <TableCell className="font-mono font-medium">
+                  <TableRow key={receipt.id} className="hover:bg-gray-50/50 border-gray-50 transition-colors">
+                    <TableCell className="font-mono font-semibold text-gray-900 pl-6">
                       {formatReceiptId(receipt.id)}
                     </TableCell>
-                    <TableCell>{receipt.store.name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-gray-600">{receipt.store.name}</TableCell>
+                    <TableCell className="text-sm text-gray-600">
                       {formatDateTime(receipt.createdAt)}
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right font-semibold text-gray-900">
                       {formatCurrency(Number(receipt.totalAmount))}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-6">
                       <Link href={`/tickets/${receipt.id}`}>
-                        <Button variant="ghost" size="sm">
-                          Voir
-                        </Button>
+                        <Button variant="ghost" size="sm" className="rounded-full">Voir</Button>
                       </Link>
                     </TableCell>
                   </TableRow>

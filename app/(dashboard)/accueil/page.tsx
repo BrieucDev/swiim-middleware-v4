@@ -1,6 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency, formatDate } from '@/lib/format'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts'
+import { KpiCard } from '@/components/dashboard/kpi-card'
+import { ChartCard } from '@/components/dashboard/chart-card'
+import { SectionHeader } from '@/components/dashboard/section-header'
 
 export default async function AccueilPage() {
   // Temporarily using mock data to fix build error
@@ -40,212 +43,185 @@ export default async function AccueilPage() {
   const bottomStores = storePerformance.slice(-3).reverse()
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <h1 className="text-3xl font-bold">Vue d&apos;ensemble</h1>
-        <p className="text-muted-foreground mt-2">
-          Vue consolidée des opérations sur les 30 derniers jours
+        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Accueil</h1>
+        <p className="text-sm text-gray-500 mt-2">
+          Vue d&apos;ensemble de vos opérations
         </p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tickets émis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalReceipts.toLocaleString('fr-FR')}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Sur les 30 derniers jours
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Chiffre d&apos;affaires</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Sur les 30 derniers jours
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taux de réclamation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.claimedRate.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Tickets réclamés numériquement
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Clients actifs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeCustomers.toLocaleString('fr-FR')}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Clients identifiés sur la période
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Panier moyen</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.averageBasket)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Par transaction
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fréquence moyenne</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.averageFrequency.toFixed(1)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Visites par client
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <KpiCard
+          title="Tickets émis"
+          value={stats.totalReceipts.toLocaleString('fr-FR')}
+          description="Sur les 30 derniers jours"
+        />
+        <KpiCard
+          title="Chiffre d'affaires"
+          value={formatCurrency(stats.totalRevenue)}
+          description="Sur les 30 derniers jours"
+        />
+        <KpiCard
+          title="Taux de réclamation"
+          value={`${stats.claimedRate.toFixed(1)}%`}
+          description="Tickets réclamés numériquement"
+        />
+        <KpiCard
+          title="Clients actifs"
+          value={stats.activeCustomers.toLocaleString('fr-FR')}
+          description="Clients identifiés sur la période"
+        />
+        <KpiCard
+          title="Panier moyen"
+          value={formatCurrency(stats.averageBasket)}
+          description="Par transaction"
+        />
+        <KpiCard
+          title="Fréquence moyenne"
+          value={stats.averageFrequency.toFixed(1)}
+          description="Visites par client"
+        />
       </div>
 
       {/* Tendances */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Tickets par jour</CardTitle>
-            <CardDescription>Évolution sur 30 jours</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="count" stroke="#C7FF06" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <SectionHeader title="Tendances" />
+      <div className="grid gap-6 md:grid-cols-2">
+        <ChartCard title="Tickets par jour" description="Évolution sur 30 jours">
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#C7FF06" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#C7FF06" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
+              <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
+              <YAxis stroke="#6B7280" fontSize={12} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #E5E7EB', 
+                  borderRadius: '8px',
+                  padding: '8px 12px'
+                }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="count" 
+                stroke="#C7FF06" 
+                strokeWidth={2}
+                fill="url(#colorCount)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Chiffre d&apos;affaires par jour</CardTitle>
-            <CardDescription>Évolution sur 30 jours</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Line type="monotone" dataKey="revenue" stroke="#C7FF06" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <ChartCard title="CA par jour" description="Évolution sur 30 jours">
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
+              <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
+              <YAxis stroke="#6B7280" fontSize={12} />
+              <Tooltip 
+                formatter={(value: number) => formatCurrency(value)}
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #E5E7EB', 
+                  borderRadius: '8px',
+                  padding: '8px 12px'
+                }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="revenue" 
+                stroke="#C7FF06" 
+                strokeWidth={2}
+                dot={{ fill: '#C7FF06', r: 3 }}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
 
       {/* Performance magasins */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Performance par magasin</CardTitle>
-          <CardDescription>Chiffre d&apos;affaires sur 30 jours</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={storePerformance}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-              <YAxis />
-              <Tooltip formatter={(value: number) => formatCurrency(value)} />
-              <Bar dataKey="revenue" fill="#C7FF06" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      <SectionHeader title="Performance magasins" />
+      <ChartCard title="Répartition par magasin" description="Chiffre d&apos;affaires sur 30 jours">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={storePerformance}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
+            <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} stroke="#6B7280" fontSize={12} />
+            <YAxis stroke="#6B7280" fontSize={12} />
+            <Tooltip 
+              formatter={(value: number) => formatCurrency(value)}
+              contentStyle={{ 
+                backgroundColor: 'white', 
+                border: '1px solid #E5E7EB', 
+                borderRadius: '8px',
+                padding: '8px 12px'
+              }}
+            />
+            <Bar dataKey="revenue" fill="#C7FF06" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
 
       {/* Top et bottom stores */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Meilleurs magasins</CardTitle>
-            <CardDescription>Par chiffre d&apos;affaires</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {topStores.map((store, idx) => (
-                <div key={store.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground font-bold">
-                      {idx + 1}
-                    </div>
-                    <div>
-                      <div className="font-medium">{store.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {store.count} tickets
-                      </div>
-                    </div>
+      <div className="grid gap-6 md:grid-cols-2">
+        <ChartCard title="Top magasins" description="Par chiffre d&apos;affaires">
+          <div className="space-y-6">
+            {topStores.map((store, idx) => (
+              <div key={store.id} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-white font-semibold text-sm">
+                    {idx + 1}
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold">{formatCurrency(store.revenue)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {store.claimedRate.toFixed(1)}% réclamés
+                  <div>
+                    <div className="font-semibold text-gray-900">{store.name}</div>
+                    <div className="text-xs text-gray-400">
+                      {store.count} tickets
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="text-right">
+                  <div className="font-semibold text-gray-900">{formatCurrency(store.revenue)}</div>
+                  <div className="text-xs text-gray-400">
+                    {store.claimedRate.toFixed(1)}% réclamés
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Magasins à suivre</CardTitle>
-            <CardDescription>Croissance potentielle</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {bottomStores.map((store, idx) => (
-                <div key={store.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground font-bold">
-                      {idx + 1}
-                    </div>
-                    <div>
-                      <div className="font-medium">{store.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {store.count} tickets
-                      </div>
-                    </div>
+        <ChartCard title="À surveiller" description="Croissance potentielle">
+          <div className="space-y-6">
+            {bottomStores.map((store, idx) => (
+              <div key={store.id} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 font-semibold text-sm">
+                    {idx + 1}
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold">{formatCurrency(store.revenue)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {store.claimedRate.toFixed(1)}% réclamés
+                  <div>
+                    <div className="font-semibold text-gray-900">{store.name}</div>
+                    <div className="text-xs text-gray-400">
+                      {store.count} tickets
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="text-right">
+                  <div className="font-semibold text-gray-900">{formatCurrency(store.revenue)}</div>
+                  <div className="text-xs text-gray-400">
+                    {store.claimedRate.toFixed(1)}% réclamés
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
       </div>
     </div>
   )

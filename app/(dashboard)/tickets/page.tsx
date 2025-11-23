@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/dashboard/status-badge'
 import { formatCurrency, formatDate, formatReceiptId, maskEmail } from '@/lib/format'
 import Link from 'next/link'
 import { Search } from 'lucide-react'
@@ -55,44 +55,34 @@ export default async function TicketsPage({
   const receipts = await getReceipts(searchParams)
   const stores = await prisma.store.findMany({ orderBy: { name: 'asc' } })
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'success' | 'warning' | 'destructive'> = {
-      EMIS: 'default',
-      RECLAME: 'success',
-      REMBOURSE: 'warning',
-      ANNULE: 'destructive',
-    }
-    return variants[status] || 'default'
-  }
-
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Tickets</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Tickets</h1>
+        <p className="text-sm text-gray-500 mt-2">
           Gestion et consultation des tickets de caisse
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtres</CardTitle>
+      <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+        <CardHeader className="px-6 pt-6">
+          <CardTitle className="text-base font-semibold text-gray-900">Filtres</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-6">
           <form method="get" className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 name="query"
                 placeholder="Rechercher par référence ou email..."
                 defaultValue={searchParams.query}
-                className="pl-10"
+                className="pl-10 rounded-full border-gray-200"
               />
             </div>
             <select
               name="status"
               defaultValue={searchParams.status || 'all'}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="h-10 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900"
             >
               <option value="all">Tous les statuts</option>
               <option value="EMIS">Émis</option>
@@ -103,7 +93,7 @@ export default async function TicketsPage({
             <select
               name="store"
               defaultValue={searchParams.store || 'all'}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="h-10 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900"
             >
               <option value="all">Tous les magasins</option>
               {stores.map((store) => (
@@ -112,65 +102,61 @@ export default async function TicketsPage({
                 </option>
               ))}
             </select>
-            <Button type="submit">Filtrer</Button>
+            <Button type="submit" className="rounded-full bg-gray-900 text-white hover:bg-gray-800">Filtrer</Button>
           </form>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des tickets</CardTitle>
+      <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+        <CardHeader className="px-6 pt-6 bg-gray-50/50 border-b border-gray-100">
+          <CardTitle className="text-base font-semibold text-gray-900">Liste des tickets</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Référence</TableHead>
-                <TableHead>Magasin</TableHead>
-                <TableHead>TPE</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-100">
+                <TableHead className="font-semibold text-gray-600 pl-6">Référence</TableHead>
+                <TableHead className="font-semibold text-gray-600">Magasin</TableHead>
+                <TableHead className="font-semibold text-gray-600">TPE</TableHead>
+                <TableHead className="font-semibold text-gray-600">Client</TableHead>
+                <TableHead className="font-semibold text-gray-600">Montant</TableHead>
+                <TableHead className="font-semibold text-gray-600">Statut</TableHead>
+                <TableHead className="font-semibold text-gray-600">Date</TableHead>
+                <TableHead className="text-right font-semibold text-gray-600 pr-6">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {receipts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center text-gray-400 py-8">
                     Aucun ticket trouvé
                   </TableCell>
                 </TableRow>
               ) : (
                 receipts.map((receipt) => (
-                  <TableRow key={receipt.id}>
-                    <TableCell className="font-mono font-medium">
+                  <TableRow key={receipt.id} className="hover:bg-gray-50/50 border-gray-50 transition-colors">
+                    <TableCell className="font-mono font-medium text-gray-900 pl-6">
                       {formatReceiptId(receipt.id)}
                     </TableCell>
-                    <TableCell>{receipt.store.name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-gray-900">{receipt.store.name}</TableCell>
+                    <TableCell className="text-sm text-gray-600">
                       {receipt.pos.name}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-gray-600">
                       {receipt.customer ? maskEmail(receipt.customer.email) : '-'}
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-semibold text-gray-900">
                       {formatCurrency(Number(receipt.totalAmount))}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadge(receipt.status)}>
-                        {receipt.status}
-                      </Badge>
+                      <StatusBadge status={receipt.status} />
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-gray-600">
                       {formatDate(receipt.createdAt)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-6">
                       <Link href={`/tickets/${receipt.id}`}>
-                        <Button variant="ghost" size="sm">
-                          Voir
-                        </Button>
+                        <Button variant="ghost" size="sm" className="rounded-full">Voir</Button>
                       </Link>
                     </TableCell>
                   </TableRow>

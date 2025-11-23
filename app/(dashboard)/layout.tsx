@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   })
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[#F5F5F7]">
       <Sidebar />
       <div className="ml-64 flex-1">
         <Header stores={stores} />

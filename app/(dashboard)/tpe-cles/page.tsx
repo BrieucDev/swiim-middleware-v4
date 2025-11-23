@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/dashboard/status-badge'
 import { CreateTerminalDialog } from '@/components/tpe/CreateTerminalDialog'
 import { formatDate } from '@/lib/format'
 import { Plus } from 'lucide-react'
@@ -40,51 +40,49 @@ export default async function TPEClesPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">TPE & Clés</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">TPE & Clés</h1>
+          <p className="text-sm text-gray-500 mt-2">
             Gestion des terminaux de paiement et clés d&apos;authentification
           </p>
         </div>
         <CreateTerminalDialog stores={stores} />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Terminaux de paiement</CardTitle>
-          <CardDescription>Liste de tous les TPE configurés</CardDescription>
+      <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+        <CardHeader className="px-6 pt-6 bg-gray-50/50 border-b border-gray-100">
+          <CardTitle className="text-base font-semibold text-gray-900">Terminaux de paiement</CardTitle>
+          <CardDescription className="text-sm text-gray-500">Liste de tous les TPE configurés</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Identifiant</TableHead>
-                <TableHead>Magasin</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Dernière activité</TableHead>
+              <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-100">
+                <TableHead className="font-semibold text-gray-600 pl-6">Nom</TableHead>
+                <TableHead className="font-semibold text-gray-600">Identifiant</TableHead>
+                <TableHead className="font-semibold text-gray-600">Magasin</TableHead>
+                <TableHead className="font-semibold text-gray-600">Statut</TableHead>
+                <TableHead className="font-semibold text-gray-600 pr-6">Dernière activité</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {terminals.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center text-gray-400 py-8">
                     Aucun terminal configuré
                   </TableCell>
                 </TableRow>
               ) : (
                 terminals.map((terminal) => (
-                  <TableRow key={terminal.id}>
-                    <TableCell className="font-medium">{terminal.name}</TableCell>
-                    <TableCell className="font-mono text-sm text-muted-foreground">
+                  <TableRow key={terminal.id} className="hover:bg-gray-50/50 border-gray-50 transition-colors">
+                    <TableCell className="font-semibold text-gray-900 pl-6">{terminal.name}</TableCell>
+                    <TableCell className="font-mono text-sm text-gray-600">
                       {terminal.identifier}
                     </TableCell>
-                    <TableCell>{terminal.store.name}</TableCell>
+                    <TableCell className="text-gray-600">{terminal.store.name}</TableCell>
                     <TableCell>
-                      <Badge variant={terminal.status === 'ACTIF' ? 'success' : 'default'}>
-                        {terminal.status}
-                      </Badge>
+                      <StatusBadge status={terminal.status} />
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-gray-600 pr-6">
                       {terminal.lastSeenAt ? formatDate(terminal.lastSeenAt) : '-'}
                     </TableCell>
                   </TableRow>

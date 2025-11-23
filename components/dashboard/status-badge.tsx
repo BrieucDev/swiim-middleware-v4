@@ -12,15 +12,15 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     const normalizedStatus = status.toUpperCase() as TicketStatus
 
     const styles: Record<string, string> = {
-        EMIS: "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200",
-        RECLAME: "bg-white text-gray-900 border-accent hover:bg-accent/10",
-        REMBOURSE: "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100",
-        ANNULE: "bg-red-50 text-red-700 border-red-100 hover:bg-red-100",
-        ACTIF: "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100",
-        INACTIF: "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200",
-        PROGRAMMEE: "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100",
-        TERMINEE: "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100",
-        BROUILLON: "bg-gray-50 text-gray-500 border-gray-200 border-dashed hover:bg-gray-100",
+        EMIS: "bg-gray-100 text-gray-700 border-gray-200",
+        RECLAME: "bg-white text-gray-900 border-[#C7FF06] border-2",
+        REMBOURSE: "bg-blue-50 text-blue-700 border-blue-200",
+        ANNULE: "bg-red-50 text-red-700 border-red-200",
+        ACTIF: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        INACTIF: "bg-gray-100 text-gray-500 border-gray-200",
+        PROGRAMMEE: "bg-amber-50 text-amber-700 border-amber-200",
+        TERMINEE: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        BROUILLON: "bg-gray-50 text-gray-500 border-gray-200 border-dashed",
     }
 
     const defaultStyle = "bg-gray-100 text-gray-700 border-gray-200"
