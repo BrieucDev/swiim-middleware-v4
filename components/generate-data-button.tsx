@@ -19,14 +19,23 @@ export function GenerateDataButton() {
                     // Refresh the page after a short delay
                     setTimeout(() => {
                         window.location.reload();
-                    }, 1500);
+                    }, 2000);
                 } else {
-                    setMessage(result.error || 'Erreur lors de la génération');
-                    console.error(result.error);
+                    const errorMsg = result.error || 'Erreur lors de la génération';
+                    setMessage(errorMsg);
+                    console.error('Generation error:', errorMsg);
+                    // Keep error message visible longer
+                    setTimeout(() => {
+                        setMessage(null);
+                    }, 5000);
                 }
             } catch (error) {
-                setMessage('Erreur lors de la génération');
+                const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
+                setMessage(`Erreur: ${errorMsg}`);
                 console.error('Error:', error);
+                setTimeout(() => {
+                    setMessage(null);
+                }, 5000);
             }
         });
     };
