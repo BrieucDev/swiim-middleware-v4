@@ -3,7 +3,6 @@
 import { PrismaClient } from '@prisma/client';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
-import { Pool } from 'pg';
 
 function normalizeDatabaseUrl(rawUrl?: string) {
     if (!rawUrl) {
@@ -203,72 +202,36 @@ export async function generateNewTicketsAndClients() {
             return { error: `Database connection failed: ${errorMessage}` };
         }
 
-        // Get existing stores using direct PostgreSQL connection to avoid prepared statements
-        // Use pg library directly to bypass Prisma's prepared statements completely
+        // Get existing stores using Prisma with retry logic
         let stores: Array<{ id: string; name: string; userId: string | null }> = [];
-        
         try {
-            const pool = new Pool({
-                connectionString: DATABASE_URL,
-                max: 1, // Single connection for this query
-                ssl: {
-                    rejectUnauthorized: false, // Required for Supabase certificates
-                },
-            });
-            
-            try {
-                const session = await auth();
-                if (session?.user?.id) {
-                    const userId = session.user.id;
-                    // Use direct PostgreSQL query with parameterized query
-                    // pg uses parameterized queries but doesn't create persistent prepared statements
-                    const result = await pool.query(
-                        'SELECT id, name, "userId" FROM "Store" WHERE "userId" = $1',
-                        [userId]
-                    );
-                    stores = result.rows as Array<{ id: string; name: string; userId: string | null }>;
-                }
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                if (errorMessage.includes('DATABASE_URL') || errorMessage.includes('Environment variable not found')) {
-                    await pool.end();
-                    return { error: 'Database connection not configured. Please check your DATABASE_URL environment variable in Vercel project settings (Settings → Environment Variables).' };
-                }
-                console.log('Auth check failed, using all stores:', error);
-            }
-            
-            // If no stores found with userId, get all stores
-            if (stores.length === 0) {
-                try {
-                    const result = await pool.query('SELECT id, name, "userId" FROM "Store"');
-                    stores = result.rows as Array<{ id: string; name: string; userId: string | null }>;
-                } catch (error) {
-                    console.error('Error fetching stores:', error);
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-                    await pool.end();
-                    if (errorMessage.includes('DATABASE_URL') || errorMessage.includes('Environment variable not found')) {
-                        return { error: 'Database connection not configured. Please check your DATABASE_URL environment variable in Vercel project settings (Settings → Environment Variables).' };
-                    }
-                    return { error: `Error fetching stores: ${errorMessage}` };
-                }
-            }
-            
-            // Close pool after use
-            await pool.end();
-        } catch (pgError) {
-            // Fallback to Prisma if pg fails
-            console.warn('pg connection failed, falling back to Prisma:', pgError);
             const session = await auth();
             if (session?.user?.id) {
                 const userId = session.user.id;
                 stores = await retryQueryWithFreshClient(async (client) => {
                     return await client.store.findMany({ where: { userId } });
-                }, 2, 200);
+                }, 3, 300);
             }
-            if (stores.length === 0) {
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (errorMessage.includes('DATABASE_URL') || errorMessage.includes('Environment variable not found')) {
+                return { error: 'Database connection not configured. Please check your DATABASE_URL environment variable in Vercel project settings (Settings → Environment Variables).' };
+            }
+            console.log('Auth check failed, using all stores:', error);
+        }
+
+        if (stores.length === 0) {
+            try {
                 stores = await retryQueryWithFreshClient(async (client) => {
                     return await client.store.findMany();
-                }, 2, 200);
+                }, 3, 300);
+            } catch (error) {
+                console.error('Error fetching stores:', error);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                if (errorMessage.includes('DATABASE_URL') || errorMessage.includes('Environment variable not found')) {
+                    return { error: 'Database connection not configured. Please check your DATABASE_URL environment variable in Vercel project settings (Settings → Environment Variables).' };
+                }
+                return { error: `Error fetching stores: ${errorMessage}` };
             }
         }
         
@@ -293,31 +256,15 @@ export async function generateNewTicketsAndClients() {
             return { error: 'No terminals found. Please create a terminal first.' };
         }
 
-        // Get existing customers using direct PostgreSQL connection
+        // Get existing customers using Prisma with retry
         let existingCustomers: Array<{ id: string; firstName: string; lastName: string; email: string }> = [];
         try {
-            const customerPool = new Pool({
-                connectionString: DATABASE_URL,
-                max: 1,
-                ssl: {
-                    rejectUnauthorized: false,
-                },
-            });
-            try {
-                const result = await customerPool.query('SELECT id, "firstName", "lastName", email FROM "Customer"');
-                existingCustomers = result.rows as Array<{ id: string; firstName: string; lastName: string; email: string }>;
-            } catch (error) {
-                console.error('Error fetching existing customers:', error);
-                // Continue anyway, we'll create new ones
-            } finally {
-                await customerPool.end();
-            }
-        } catch (pgError) {
-            // Fallback to Prisma if pg fails
-            console.warn('pg connection failed for customers, using Prisma:', pgError);
             existingCustomers = await retryQueryWithFreshClient(async (client) => {
                 return await client.customer.findMany();
-            }, 2, 200);
+            }, 3, 300);
+        } catch (error) {
+            console.error('Error fetching existing customers:', error);
+            // Continue anyway, we'll create new ones
         }
         const customers = [...existingCustomers];
 
