@@ -1,9 +1,16 @@
 'use server';
 
-import { prisma } from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
-import { Prisma } from '@prisma/client';
+
+// Create a fresh Prisma instance for this action to avoid prepared statement conflicts
+// This is necessary in serverless environments with connection pooling
+function getFreshPrismaClient() {
+    return new PrismaClient({
+        log: process.env.NODE_ENV === "development" ? ["error"] : ["error"],
+    });
+}
 
 const categories = ['Livres', 'Hi-Tech', 'Gaming', 'Vinyles', 'Accessoires', 'Musique', 'Cinéma'];
 const firstNames = ['Jean', 'Marie', 'Pierre', 'Sophie', 'Antoine', 'Camille', 'Lucas', 'Emma'];
@@ -119,33 +126,27 @@ export async function generateDemoData() {
     }
 }
 
-// Retry function for prepared statement errors with connection reset
-async function retryQuery<T>(
-    queryFn: () => Promise<T>,
+// Retry function with fresh Prisma instance for each attempt
+async function retryQueryWithFreshClient<T>(
+    queryFn: (client: PrismaClient) => Promise<T>,
     maxRetries: number = 3,
     delay: number = 200
 ): Promise<T> {
     for (let i = 0; i < maxRetries; i++) {
+        const client = getFreshPrismaClient();
         try {
-            return await queryFn()
+            const result = await queryFn(client);
+            await client.$disconnect();
+            return result;
         } catch (error: any) {
+            await client.$disconnect().catch(() => {}); // Ignore disconnect errors
             const errorMessage = error?.message || String(error)
             const isPreparedStatementError = errorMessage.includes('prepared statement') && 
                                            (errorMessage.includes('already exists') || /s\d+/.test(errorMessage))
             
             if (isPreparedStatementError && i < maxRetries - 1) {
                 console.log(`[Retry] Prepared statement error, attempt ${i + 1}/${maxRetries}, waiting ${delay * (i + 1)}ms...`)
-                
-                // Disconnect and reconnect to reset prepared statements
-                try {
-                    await prisma.$disconnect()
-                    await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
-                    await prisma.$connect()
-                } catch (disconnectError) {
-                    // Ignore disconnect errors, just wait
-                    await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
-                }
-                
+                await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
                 continue
             }
             throw error
@@ -161,10 +162,13 @@ export async function generateNewTicketsAndClients() {
             return { error: 'DATABASE_URL environment variable is not configured. Please configure it in your Vercel project settings (Settings → Environment Variables).' };
         }
 
-        // Test database connection first
+        // Test database connection first with fresh client
+        const testClient = getFreshPrismaClient();
         try {
-            await prisma.$connect();
+            await testClient.$connect();
+            await testClient.$disconnect();
         } catch (connectionError) {
+            await testClient.$disconnect().catch(() => {});
             const errorMessage = connectionError instanceof Error ? connectionError.message : String(connectionError);
             console.error('Database connection error:', errorMessage);
             if (errorMessage.includes("Can't reach database server")) {
@@ -175,17 +179,16 @@ export async function generateNewTicketsAndClients() {
             return { error: `Database connection failed: ${errorMessage}` };
         }
 
-        // Get existing stores (try with userId first, then all stores) with retry
-        // Use $queryRawUnsafe to completely avoid prepared statements
+        // Get existing stores (try with userId first, then all stores) with fresh client
+        // Use fresh Prisma instance for each query to avoid prepared statement conflicts
         let stores: Array<{ id: string; name: string; userId: string | null }> = [];
         try {
             const session = await auth();
             if (session?.user?.id) {
                 const userId = session.user.id;
-                stores = await retryQuery(async () => {
-                    // Use $queryRawUnsafe to avoid prepared statement issues completely
-                    // This executes raw SQL without preparing statements
-                    const result = await prisma.$queryRawUnsafe<Array<{ id: string; name: string; userId: string | null }>>(
+                stores = await retryQueryWithFreshClient(async (client) => {
+                    // Use $queryRawUnsafe with fresh client to avoid prepared statement issues
+                    const result = await client.$queryRawUnsafe<Array<{ id: string; name: string; userId: string | null }>>(
                         `SELECT id, name, "userId" FROM "Store" WHERE "userId" = $1`,
                         userId
                     );
@@ -200,12 +203,12 @@ export async function generateNewTicketsAndClients() {
             console.log('Auth check failed, using all stores:', error);
         }
         
-        // If no stores found with userId, get all stores with retry using unsafe raw query
+        // If no stores found with userId, get all stores with fresh client
         if (stores.length === 0) {
             try {
-                stores = await retryQuery(async () => {
-                    // Use $queryRawUnsafe to avoid prepared statement issues completely
-                    const result = await prisma.$queryRawUnsafe<Array<{ id: string; name: string; userId: string | null }>>(
+                stores = await retryQueryWithFreshClient(async (client) => {
+                    // Use $queryRawUnsafe with fresh client to avoid prepared statement issues
+                    const result = await client.$queryRawUnsafe<Array<{ id: string; name: string; userId: string | null }>>(
                         `SELECT id, name, "userId" FROM "Store"`
                     );
                     return result;
@@ -224,12 +227,11 @@ export async function generateNewTicketsAndClients() {
             return { error: 'No stores found. Please create a store first.' };
         }
 
-        // Get existing terminals with retry
-        // Use regular query with retry (raw queries are complex with arrays)
+        // Get existing terminals with fresh client
         let terminals: Array<{ id: string; storeId: string; name: string; identifier: string }> = [];
         try {
-            terminals = await retryQuery(async () => {
-                return await prisma.posTerminal.findMany({
+            terminals = await retryQueryWithFreshClient(async (client) => {
+                return await client.posTerminal.findMany({
                     where: { storeId: { in: stores.map(s => s.id) } },
                 });
             }, 3, 300);
@@ -242,12 +244,12 @@ export async function generateNewTicketsAndClients() {
             return { error: 'No terminals found. Please create a terminal first.' };
         }
 
-        // Get existing customers with retry using unsafe raw query
+        // Get existing customers with fresh client
         let existingCustomers: Array<{ id: string; firstName: string; lastName: string; email: string }> = [];
         try {
-            existingCustomers = await retryQuery(async () => {
-                // Use $queryRawUnsafe to avoid prepared statement issues completely
-                const result = await prisma.$queryRawUnsafe<Array<{ id: string; firstName: string; lastName: string; email: string }>>(
+            existingCustomers = await retryQueryWithFreshClient(async (client) => {
+                // Use $queryRawUnsafe with fresh client to avoid prepared statement issues
+                const result = await client.$queryRawUnsafe<Array<{ id: string; firstName: string; lastName: string; email: string }>>(
                     `SELECT id, "firstName", "lastName", email FROM "Customer"`
                 );
                 return result;
@@ -275,21 +277,21 @@ export async function generateNewTicketsAndClients() {
         let createdCustomers = 0;
         if (newCustomersData.length > 0) {
             try {
-                // Use createMany for batch creation (much faster)
-                await retryQuery(async () => {
-                    await prisma.customer.createMany({
+                // Use createMany for batch creation (much faster) with fresh client
+                await retryQueryWithFreshClient(async (client) => {
+                    await client.customer.createMany({
                         data: newCustomersData,
                         skipDuplicates: true, // Skip if email already exists
                     });
-                }, 2, 200);
+                }, 3, 300);
                 
-                // Fetch the created customers to add to our list
+                // Fetch the created customers to add to our list with fresh client
                 const createdEmails = newCustomersData.map(c => c.email);
-                const created = await retryQuery(async () => {
-                    return await prisma.customer.findMany({
+                const created = await retryQueryWithFreshClient(async (client) => {
+                    return await client.customer.findMany({
                         where: { email: { in: createdEmails } },
                     });
-                }, 2, 200);
+                }, 3, 300);
                 customers.push(...created);
                 createdCustomers = created.length;
             } catch (error) {
@@ -297,8 +299,8 @@ export async function generateNewTicketsAndClients() {
                 // Fallback to individual creation if batch fails
                 for (const customerData of newCustomersData) {
                     try {
-                        const customer = await retryQuery(async () => {
-                            return await prisma.customer.create({ data: customerData });
+                        const customer = await retryQueryWithFreshClient(async (client) => {
+                            return await client.customer.create({ data: customerData });
                         }, 2, 200);
                         customers.push(customer);
                         createdCustomers++;
@@ -368,15 +370,15 @@ export async function generateNewTicketsAndClients() {
             });
         }
 
-        // Create receipts in batches using transaction (faster and handles errors better)
+        // Create receipts in batches using transaction with fresh client
         let createdReceipts = 0;
         const batchSize = 10; // Process 10 receipts at a time
         
         for (let i = 0; i < receiptsData.length; i += batchSize) {
             const batch = receiptsData.slice(i, i + batchSize);
             try {
-                await retryQuery(async () => {
-                    await prisma.$transaction(async (tx) => {
+                await retryQueryWithFreshClient(async (client) => {
+                    await client.$transaction(async (tx) => {
                         for (const receiptData of batch) {
                             const { lineItems, ...receiptDataWithoutItems } = receiptData;
                             await tx.receipt.create({
@@ -393,15 +395,15 @@ export async function generateNewTicketsAndClients() {
                         maxWait: 10000,
                         timeout: 20000,
                     });
-                }, 2, 200);
+                }, 3, 300);
             } catch (error) {
                 console.error(`Error creating receipt batch ${Math.floor(i / batchSize) + 1}:`, error);
                 // Try creating individually if batch fails
                 for (const receiptData of batch) {
                     try {
                         const { lineItems, ...receiptDataWithoutItems } = receiptData;
-                        await retryQuery(async () => {
-                            await prisma.receipt.create({
+                        await retryQueryWithFreshClient(async (client) => {
+                            await client.receipt.create({
                                 data: {
                                     ...receiptDataWithoutItems,
                                     lineItems: {
