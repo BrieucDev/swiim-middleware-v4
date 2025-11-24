@@ -168,8 +168,9 @@ export async function generateNewTicketsAndClients() {
         try {
             const session = await auth();
             if (session?.user?.id) {
+                const userId = session.user.id;
                 stores = await retryQuery(async () => {
-                    return await prisma.store.findMany({ where: { userId: session.user.id } });
+                    return await prisma.store.findMany({ where: { userId } });
                 }, 2, 200);
             }
         } catch (error) {
@@ -231,7 +232,7 @@ export async function generateNewTicketsAndClients() {
 
         // Create 5-10 new customers in batch (much faster)
         const newCustomersCount = randomInt(5, 10);
-        const newCustomersData = [];
+        const newCustomersData: Array<{ firstName: string; lastName: string; email: string }> = [];
         for (let i = 0; i < newCustomersCount; i++) {
             const firstName = randomChoice(firstNames);
             const lastName = randomChoice(lastNames);
