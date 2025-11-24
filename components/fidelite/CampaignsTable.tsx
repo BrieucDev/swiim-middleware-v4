@@ -27,6 +27,7 @@ interface Campaign {
 
 interface CampaignsTableProps {
   campaigns: Campaign[]
+  programId: string
   onCreate: (campaign: Partial<Campaign>) => Promise<void>
   onUpdate: (id: string, campaign: Partial<Campaign>) => Promise<void>
 }
@@ -43,7 +44,7 @@ const offerTypeLabels: Record<string, string> = {
   PRODUIT_OFFERT: 'Produit offert',
 }
 
-export function CampaignsTable({ campaigns, onCreate, onUpdate }: CampaignsTableProps) {
+export function CampaignsTable({ campaigns, programId, onCreate, onUpdate }: CampaignsTableProps) {
   const [isCreating, setIsCreating] = useState(false)
 
   const formatCurrency = (amount: number) => {
@@ -150,6 +151,9 @@ export function CampaignsTable({ campaigns, onCreate, onUpdate }: CampaignsTable
 
       {isCreating && (
         <CampaignCreator
+          programId={programId}
+          open={isCreating}
+          onOpenChange={setIsCreating}
           onSave={async (campaign) => {
             await onCreate(campaign)
             setIsCreating(false)

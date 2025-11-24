@@ -42,9 +42,23 @@ const offerTypes = [
   { value: 'PRODUIT_OFFERT', label: 'Produit offert' },
 ]
 
-export function CampaignCreator({ programId }: { programId: string }) {
+interface CampaignCreatorProps {
+  programId: string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  onSave?: (campaign: any) => Promise<void>
+  onCancel?: () => void
+}
+
+export function CampaignCreator({ 
+  programId, 
+  open: controlledOpen, 
+  onOpenChange: controlledOnOpenChange,
+  onSave,
+  onCancel 
+}: CampaignCreatorProps) {
   const router = useRouter()
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -53,6 +67,10 @@ export function CampaignCreator({ programId }: { programId: string }) {
     channel: '',
     offerType: '',
   })
+
+  // Use controlled or uncontrolled mode
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const setIsOpen = controlledOnOpenChange || setInternalOpen
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,7 +89,19 @@ export function CampaignCreator({ programId }: { programId: string }) {
       })
 
       if (response.ok) {
-        router.refresh()
+        const campaignData = {
+          programId,
+          ...formData,
+          offerPayload: {},
+          status: 'BROUILLON',
+        }
+        
+        if (onSave) {
+          await onSave(campaignData)
+        } else {
+          router.refresh()
+        }
+        
         setIsOpen(false)
         setFormData({
           name: '',
@@ -88,15 +118,8 @@ export function CampaignCreator({ programId }: { programId: string }) {
     }
   }
 
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Créer une campagne
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
+  const dialogContent = (
+    <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Créer une campagne</DialogTitle>
@@ -184,7 +207,12 @@ export function CampaignCreator({ programId }: { programId: string }) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                if (onCancel) {
+                  onCancel()
+                }
+                setIsOpen(false)
+              }}
               disabled={isLoading}
             >
               Annuler
@@ -195,6 +223,27 @@ export function CampaignCreator({ programId }: { programId: string }) {
           </DialogFooter>
         </form>
       </DialogContent>
+  )
+
+  // If controlled mode (no trigger), just return the content
+  if (controlledOpen !== undefined) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        {dialogContent}
+      </Dialog>
+    )
+  }
+
+  // Uncontrolled mode with trigger
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Créer une campagne
+        </Button>
+      </DialogTrigger>
+      {dialogContent}
     </Dialog>
   )
 }
