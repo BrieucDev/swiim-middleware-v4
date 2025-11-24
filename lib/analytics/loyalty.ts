@@ -1,9 +1,83 @@
 import { prisma } from '@/lib/prisma'
 import { Decimal } from '@prisma/client/runtime/library'
 
+async function initializeDefaultLoyaltyProgram() {
+  try {
+    // Check if a program already exists
+    const existing = await prisma.loyaltyProgram.findFirst()
+    if (existing) {
+      return existing
+    }
+
+    // Create default program
+    const program = await prisma.loyaltyProgram.create({
+      data: {
+        name: 'Programme de fidélité Swiim',
+        description: 'Programme de fidélité par défaut',
+        pointsPerEuro: 1,
+        conversionRate: 100,
+        conversionValue: 5,
+        bonusCategories: {
+          'Livres': 2,
+          'Vinyles': 2,
+        },
+        pointsExpiryDays: 365,
+      },
+    })
+
+    // Create default tiers
+    const bronze = await prisma.loyaltyTier.create({
+      data: {
+        programId: program.id,
+        name: 'Bronze',
+        minSpend: 0,
+        maxSpend: 100,
+        benefits: {
+          'Points standard': '1 point par euro',
+        },
+        sortOrder: 1,
+      },
+    })
+
+    const argent = await prisma.loyaltyTier.create({
+      data: {
+        programId: program.id,
+        name: 'Argent',
+        minSpend: 100,
+        maxSpend: 500,
+        benefits: {
+          'Points bonus': '1.5 points par euro',
+          'Remise': '5% sur les achats',
+        },
+        sortOrder: 2,
+      },
+    })
+
+    const or = await prisma.loyaltyTier.create({
+      data: {
+        programId: program.id,
+        name: 'Or',
+        minSpend: 500,
+        maxSpend: null,
+        benefits: {
+          'Points premium': '2 points par euro',
+          'Remise': '10% sur les achats',
+          'Livraison gratuite': 'Toujours',
+        },
+        sortOrder: 3,
+      },
+    })
+
+    return program
+  } catch (error) {
+    console.error('Error initializing default loyalty program:', error)
+    return null
+  }
+}
+
 export async function getLoyaltyStats() {
   try {
-    const program = await prisma.loyaltyProgram.findFirst({
+    let program = await prisma.loyaltyProgram.findFirst({
       include: {
         accounts: {
           include: {
@@ -11,13 +85,42 @@ export async function getLoyaltyStats() {
             customer: true,
           },
         },
-        tiers: true,
+        tiers: {
+          orderBy: {
+            sortOrder: 'asc',
+          },
+        },
         campaigns: true,
       },
     })
 
+    // Initialize default program if none exists
     if (!program) {
-      return null
+      program = await initializeDefaultLoyaltyProgram()
+      if (!program) {
+        return null
+      }
+      // Re-fetch with all relations
+      program = await prisma.loyaltyProgram.findFirst({
+        where: { id: program.id },
+        include: {
+          accounts: {
+            include: {
+              tier: true,
+              customer: true,
+            },
+          },
+          tiers: {
+            orderBy: {
+              sortOrder: 'asc',
+            },
+          },
+          campaigns: true,
+        },
+      })
+      if (!program) {
+        return null
+      }
     }
 
     const accounts = program.accounts

@@ -17,7 +17,8 @@ import { getLoyaltyStats } from '@/lib/analytics/loyalty'
 import { LoyaltyProgramEditor } from '@/components/fidelite/LoyaltyProgramEditor'
 import { CampaignCreator } from '@/components/fidelite/CampaignCreator'
 import { ImpactSimulator } from '@/components/fidelite/ImpactSimulator'
-import { Pencil } from 'lucide-react'
+import { KpiCard } from '@/components/dashboard/kpi-card'
+import { Users, Coins, TrendingUp, Euro } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -137,73 +138,81 @@ export default async function FidelitePage() {
   }
 
   return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Fidélité</h1>
-        <p className="text-sm text-gray-500 mt-2">
-          Gestion du programme de fidélité et campagnes
+    <div className="space-y-8 p-6">
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Fidélité</h1>
+        <p className="text-base text-gray-500">
+          Gestion complète de votre programme de fidélité et campagnes marketing
         </p>
       </div>
 
       {/* Overview KPIs */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
-            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Membres</CardTitle>
-          </CardHeader>
-          <CardContent className="px-6 pb-6">
-            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{stats.totalMembers.toLocaleString('fr-FR')}</div>
-            <p className="text-xs text-gray-400 mt-2">
-              Membres actifs
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
-            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Points en circulation</CardTitle>
-          </CardHeader>
-          <CardContent className="px-6 pb-6">
-            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{stats.pointsInCirculation.toLocaleString('fr-FR')}</div>
-            <p className="text-xs text-gray-400 mt-2">
-              Points non utilisés
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
-            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">Taux d&apos;engagement</CardTitle>
-          </CardHeader>
-          <CardContent className="px-6 pb-6">
-            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{stats.engagementRate.toFixed(1)}%</div>
-            <p className="text-xs text-gray-400 mt-2">
-              Activité 60 derniers jours
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
-            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-[0.14em]">CA généré (30j)</CardTitle>
-          </CardHeader>
-          <CardContent className="px-6 pb-6">
-            <div className="text-2xl md:text-3xl font-semibold text-gray-900">{formatCurrency(stats.loyaltyRevenue)}</div>
-            <p className="text-xs text-gray-400 mt-2">
-              Clients fidélisés
-            </p>
-          </CardContent>
-        </Card>
+        <KpiCard
+          title="Membres inscrits"
+          value={stats.totalMembers.toLocaleString('fr-FR')}
+          description="Membres actifs"
+          icon={Users}
+        />
+        <KpiCard
+          title="Points en circulation"
+          value={stats.pointsInCirculation.toLocaleString('fr-FR')}
+          description="Points non utilisés"
+          icon={Coins}
+        />
+        <KpiCard
+          title="Taux d'engagement"
+          value={`${stats.engagementRate.toFixed(1)}%`}
+          description="Activité 60 derniers jours"
+          icon={TrendingUp}
+        />
+        <KpiCard
+          title="CA généré (30j)"
+          value={formatCurrency(stats.loyaltyRevenue)}
+          description="Clients fidélisés"
+          icon={Euro}
+        />
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Vue d&apos;ensemble</TabsTrigger>
-          <TabsTrigger value="program">Règles du programme</TabsTrigger>
-          <TabsTrigger value="tiers">Niveaux de fidélité</TabsTrigger>
-          <TabsTrigger value="customers">Top clients</TabsTrigger>
-          <TabsTrigger value="campaigns">Campagnes</TabsTrigger>
-          <TabsTrigger value="simulator">Simulateur</TabsTrigger>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="bg-white/90 border border-gray-100 rounded-2xl p-1.5 shadow-sm">
+          <TabsTrigger 
+            value="overview"
+            className="rounded-xl data-[state=active]:bg-[#C7FF06] data-[state=active]:text-gray-900 data-[state=active]:font-semibold"
+          >
+            Vue d&apos;ensemble
+          </TabsTrigger>
+          <TabsTrigger 
+            value="program"
+            className="rounded-xl data-[state=active]:bg-[#C7FF06] data-[state=active]:text-gray-900 data-[state=active]:font-semibold"
+          >
+            Règles du programme
+          </TabsTrigger>
+          <TabsTrigger 
+            value="tiers"
+            className="rounded-xl data-[state=active]:bg-[#C7FF06] data-[state=active]:text-gray-900 data-[state=active]:font-semibold"
+          >
+            Niveaux de fidélité
+          </TabsTrigger>
+          <TabsTrigger 
+            value="customers"
+            className="rounded-xl data-[state=active]:bg-[#C7FF06] data-[state=active]:text-gray-900 data-[state=active]:font-semibold"
+          >
+            Top clients
+          </TabsTrigger>
+          <TabsTrigger 
+            value="campaigns"
+            className="rounded-xl data-[state=active]:bg-[#C7FF06] data-[state=active]:text-gray-900 data-[state=active]:font-semibold"
+          >
+            Campagnes
+          </TabsTrigger>
+          <TabsTrigger 
+            value="simulator"
+            className="rounded-xl data-[state=active]:bg-[#C7FF06] data-[state=active]:text-gray-900 data-[state=active]:font-semibold"
+          >
+            Simulateur
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -222,11 +231,11 @@ export default async function FidelitePage() {
                           {tier.count} membres
                         </div>
                       </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-3 bg-gray-100/80 rounded-full overflow-hidden shadow-inner">
                         <div
-                          className="h-full bg-[#C7FF06]"
+                          className="h-full bg-gradient-to-r from-[#C7FF06] to-[#B8E600] rounded-full transition-all duration-500 shadow-sm"
                           style={{
-                            width: `${(tier.count / stats.totalMembers) * 100}%`,
+                            width: `${stats.totalMembers > 0 ? (tier.count / stats.totalMembers) * 100 : 0}%`,
                           }}
                         />
                       </div>
@@ -258,13 +267,13 @@ export default async function FidelitePage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="program" className="space-y-4">
-          <Card className="bg-white/90 border border-gray-100 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
-            <CardHeader className="px-6 pt-6">
+        <TabsContent value="program" className="space-y-6">
+          <Card className="bg-white/90 border border-gray-100/70 rounded-2xl shadow-[0_10px_40px_rgba(15,23,42,0.04)] hover:shadow-[0_10px_40px_rgba(15,23,42,0.08)] transition-shadow">
+            <CardHeader className="px-6 pt-6 pb-4 border-b border-gray-100/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold text-gray-900">Règles du programme</CardTitle>
-                  <CardDescription className="text-sm text-gray-500">{stats.program.name}</CardDescription>
+                  <CardTitle className="text-xl font-semibold text-gray-900">Règles du programme</CardTitle>
+                  <CardDescription className="text-sm text-gray-500 mt-1">{stats.program.name}</CardDescription>
                 </div>
                 <LoyaltyProgramEditor program={stats.program} />
               </div>
@@ -283,10 +292,14 @@ export default async function FidelitePage() {
                 </div>
                 <div>
                   <div className="text-xs text-gray-500 uppercase tracking-[0.14em] mb-2">Bonus catégories</div>
-                  <div>
+                  <div className="flex flex-wrap gap-2">
                     {stats.program.bonusCategories ? (
                       Object.entries(stats.program.bonusCategories as Record<string, number>).map(([cat, mult]) => (
-                        <Badge key={cat} variant="outline" className="mr-2 rounded-full border-gray-200">
+                        <Badge 
+                          key={cat} 
+                          variant="outline" 
+                          className="rounded-full border-[#C7FF06]/30 bg-[#C7FF06]/10 text-gray-900 font-medium px-3 py-1"
+                        >
                           {cat}: x{mult}
                         </Badge>
                       ))
