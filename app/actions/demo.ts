@@ -118,6 +118,30 @@ export async function generateDemoData() {
     }
 }
 
+// Retry function for prepared statement errors
+async function retryQuery<T>(
+    queryFn: () => Promise<T>,
+    maxRetries: number = 3,
+    delay: number = 100
+): Promise<T> {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await queryFn()
+        } catch (error: any) {
+            const isPreparedStatementError = error?.message?.includes('prepared statement') && 
+                                           (error?.message?.includes('already exists') || error?.message?.includes('s'))
+            
+            if (isPreparedStatementError && i < maxRetries - 1) {
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
+                continue
+            }
+            throw error
+        }
+    }
+    throw new Error('Max retries exceeded')
+}
+
 export async function generateNewTicketsAndClients() {
     try {
         // Check if DATABASE_URL is available
@@ -139,12 +163,14 @@ export async function generateNewTicketsAndClients() {
             return { error: `Database connection failed: ${errorMessage}` };
         }
 
-        // Get existing stores (try with userId first, then all stores)
+        // Get existing stores (try with userId first, then all stores) with retry
         let stores: Array<{ id: string; name: string; userId: string | null }> = [];
         try {
             const session = await auth();
             if (session?.user?.id) {
-                stores = await prisma.store.findMany({ where: { userId: session.user.id } });
+                stores = await retryQuery(async () => {
+                    return await prisma.store.findMany({ where: { userId: session.user.id } });
+                }, 2, 200);
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -154,10 +180,12 @@ export async function generateNewTicketsAndClients() {
             console.log('Auth check failed, using all stores:', error);
         }
         
-        // If no stores found with userId, get all stores
+        // If no stores found with userId, get all stores with retry
         if (stores.length === 0) {
             try {
-                stores = await prisma.store.findMany();
+                stores = await retryQuery(async () => {
+                    return await prisma.store.findMany();
+                }, 2, 200);
             } catch (error) {
                 console.error('Error fetching stores:', error);
                 const errorMessage = error instanceof Error ? error.message : String(error);
@@ -172,12 +200,14 @@ export async function generateNewTicketsAndClients() {
             return { error: 'No stores found. Please create a store first.' };
         }
 
-        // Get existing terminals
+        // Get existing terminals with retry
         let terminals = [];
         try {
-            terminals = await prisma.posTerminal.findMany({
-                where: { storeId: { in: stores.map(s => s.id) } },
-            });
+            terminals = await retryQuery(async () => {
+                return await prisma.posTerminal.findMany({
+                    where: { storeId: { in: stores.map(s => s.id) } },
+                });
+            }, 2, 200);
         } catch (error) {
             console.error('Error fetching terminals:', error);
             return { error: `Error fetching terminals: ${error instanceof Error ? error.message : 'Unknown error'}` };
@@ -187,40 +217,70 @@ export async function generateNewTicketsAndClients() {
             return { error: 'No terminals found. Please create a terminal first.' };
         }
 
-        // Get existing customers or create new ones
+        // Get existing customers with retry
         let existingCustomers: Array<{ id: string; firstName: string; lastName: string; email: string }> = [];
         try {
-            existingCustomers = await prisma.customer.findMany();
+            existingCustomers = await retryQuery(async () => {
+                return await prisma.customer.findMany();
+            }, 2, 200);
         } catch (error) {
             console.error('Error fetching existing customers:', error);
             // Continue anyway, we'll create new ones
         }
         const customers = [...existingCustomers];
 
-        // Create 5-10 new customers
+        // Create 5-10 new customers in batch (much faster)
         const newCustomersCount = randomInt(5, 10);
-        let createdCustomers = 0;
+        const newCustomersData = [];
         for (let i = 0; i < newCustomersCount; i++) {
+            const firstName = randomChoice(firstNames);
+            const lastName = randomChoice(lastNames);
+            const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${Math.random().toString(36).substring(2, 5)}@swiim.client`;
+            newCustomersData.push({
+                firstName,
+                lastName,
+                email,
+            });
+        }
+
+        let createdCustomers = 0;
+        if (newCustomersData.length > 0) {
             try {
-                const firstName = randomChoice(firstNames);
-                const lastName = randomChoice(lastNames);
-                const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${Math.random().toString(36).substring(2, 5)}@swiim.client`;
-                const customer = await prisma.customer.create({
-                    data: {
-                        firstName,
-                        lastName,
-                        email,
-                    },
-                });
-                customers.push(customer);
-                createdCustomers++;
+                // Use createMany for batch creation (much faster)
+                await retryQuery(async () => {
+                    await prisma.customer.createMany({
+                        data: newCustomersData,
+                        skipDuplicates: true, // Skip if email already exists
+                    });
+                }, 2, 200);
+                
+                // Fetch the created customers to add to our list
+                const createdEmails = newCustomersData.map(c => c.email);
+                const created = await retryQuery(async () => {
+                    return await prisma.customer.findMany({
+                        where: { email: { in: createdEmails } },
+                    });
+                }, 2, 200);
+                customers.push(...created);
+                createdCustomers = created.length;
             } catch (error) {
-                console.error(`Error creating customer ${i + 1}:`, error);
-                // Continue with next customer
+                console.error('Error creating customers in batch:', error);
+                // Fallback to individual creation if batch fails
+                for (const customerData of newCustomersData) {
+                    try {
+                        const customer = await retryQuery(async () => {
+                            return await prisma.customer.create({ data: customerData });
+                        }, 2, 200);
+                        customers.push(customer);
+                        createdCustomers++;
+                    } catch (err) {
+                        console.error('Error creating individual customer:', err);
+                    }
+                }
             }
         }
 
-        // Create 20-30 new receipts
+        // Create 20-30 new receipts using transaction for better performance
         const now = new Date();
         const startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
 
@@ -228,64 +288,104 @@ export async function generateNewTicketsAndClients() {
         const statuses: Array<'EMIS' | 'RECLAME' | 'REMBOURSE' | 'ANNULE'> = ['EMIS', 'RECLAME', 'REMBOURSE', 'ANNULE'];
         const statusWeights = [0.7, 0.15, 0.1, 0.05]; // Most are EMIS
 
-        let createdReceipts = 0;
+        // Prepare all receipt data first
+        const receiptsData = [];
         for (let i = 0; i < receiptsCount; i++) {
-            try {
-                const store = randomChoice(stores);
-                const storeTerminals = terminals.filter(t => t.storeId === store.id);
-                if (storeTerminals.length === 0) {
-                    // Skip this iteration if no terminals for this store
-                    continue;
-                }
-                const terminal = randomChoice(storeTerminals);
-                const customer = customers.length > 0 && Math.random() < 0.8 ? randomChoice(customers) : null;
-                const receiptDate = randomDate(startDate, now);
-                const numItems = randomInt(1, 6);
-                let subtotal = 0;
-                const lineItems = [];
+            const store = randomChoice(stores);
+            const storeTerminals = terminals.filter(t => t.storeId === store.id);
+            if (storeTerminals.length === 0) {
+                continue;
+            }
+            const terminal = randomChoice(storeTerminals);
+            const customer = customers.length > 0 && Math.random() < 0.8 ? randomChoice(customers) : null;
+            const receiptDate = randomDate(startDate, now);
+            const numItems = randomInt(1, 6);
+            let subtotal = 0;
+            const lineItems = [];
 
-                // Weighted random status
-                const rand = Math.random();
-                let status: 'EMIS' | 'RECLAME' | 'REMBOURSE' | 'ANNULE' = 'EMIS';
-                let cumulative = 0;
-                for (let j = 0; j < statuses.length; j++) {
-                    cumulative += statusWeights[j];
-                    if (rand <= cumulative) {
-                        status = statuses[j];
-                        break;
+            // Weighted random status
+            const rand = Math.random();
+            let status: 'EMIS' | 'RECLAME' | 'REMBOURSE' | 'ANNULE' = 'EMIS';
+            let cumulative = 0;
+            for (let j = 0; j < statuses.length; j++) {
+                cumulative += statusWeights[j];
+                if (rand <= cumulative) {
+                    status = statuses[j];
+                    break;
+                }
+            }
+
+            for (let j = 0; j < numItems; j++) {
+                const quantity = randomInt(1, 3);
+                const unitPrice = randomFloat(5, 150);
+                lineItems.push({
+                    category: randomChoice(categories),
+                    productName: `Produit ${randomChoice(['Premium', 'Standard', 'Éco', 'Luxe'])} ${randomInt(1, 200)}`,
+                    quantity,
+                    unitPrice,
+                });
+                subtotal += quantity * unitPrice;
+            }
+
+            receiptsData.push({
+                posId: terminal.id,
+                storeId: store.id,
+                customerId: customer?.id,
+                status,
+                totalAmount: subtotal,
+                currency: 'EUR',
+                createdAt: receiptDate,
+                lineItems,
+            });
+        }
+
+        // Create receipts in batches using transaction (faster and handles errors better)
+        let createdReceipts = 0;
+        const batchSize = 10; // Process 10 receipts at a time
+        
+        for (let i = 0; i < receiptsData.length; i += batchSize) {
+            const batch = receiptsData.slice(i, i + batchSize);
+            try {
+                await retryQuery(async () => {
+                    await prisma.$transaction(async (tx) => {
+                        for (const receiptData of batch) {
+                            const { lineItems, ...receiptDataWithoutItems } = receiptData;
+                            await tx.receipt.create({
+                                data: {
+                                    ...receiptDataWithoutItems,
+                                    lineItems: {
+                                        create: lineItems,
+                                    },
+                                },
+                            });
+                            createdReceipts++;
+                        }
+                    }, {
+                        maxWait: 10000,
+                        timeout: 20000,
+                    });
+                }, 2, 200);
+            } catch (error) {
+                console.error(`Error creating receipt batch ${Math.floor(i / batchSize) + 1}:`, error);
+                // Try creating individually if batch fails
+                for (const receiptData of batch) {
+                    try {
+                        const { lineItems, ...receiptDataWithoutItems } = receiptData;
+                        await retryQuery(async () => {
+                            await prisma.receipt.create({
+                                data: {
+                                    ...receiptDataWithoutItems,
+                                    lineItems: {
+                                        create: lineItems,
+                                    },
+                                },
+                            });
+                            createdReceipts++;
+                        }, 2, 200);
+                    } catch (err) {
+                        console.error('Error creating individual receipt:', err);
                     }
                 }
-
-                for (let j = 0; j < numItems; j++) {
-                    const quantity = randomInt(1, 3);
-                    const unitPrice = randomFloat(5, 150);
-                    lineItems.push({
-                        category: randomChoice(categories),
-                        productName: `Produit ${randomChoice(['Premium', 'Standard', 'Éco', 'Luxe'])} ${randomInt(1, 200)}`,
-                        quantity,
-                        unitPrice,
-                    });
-                    subtotal += quantity * unitPrice;
-                }
-
-                await prisma.receipt.create({
-                    data: {
-                        posId: terminal.id,
-                        storeId: store.id,
-                        customerId: customer?.id,
-                        status,
-                        totalAmount: subtotal,
-                        currency: 'EUR',
-                        createdAt: receiptDate,
-                        lineItems: {
-                            create: lineItems,
-                        },
-                    },
-                });
-                createdReceipts++;
-            } catch (error) {
-                console.error(`Error creating receipt ${i + 1}:`, error);
-                // Continue with next receipt
             }
         }
 
