@@ -28,14 +28,67 @@ async function retryQuery<T>(
 
 export async function initializeLoyaltyProgram() {
   try {
+    // First, test database connection
+    try {
+      await prisma.$connect()
+      console.log('[Initialize] Database connection successful')
+    } catch (connError) {
+      console.error('[Initialize] Database connection failed:', connError)
+      return {
+        success: false,
+        error: 'Impossible de se connecter à la base de données. Vérifiez votre configuration DATABASE_URL.',
+        details: connError instanceof Error ? connError.message : String(connError)
+      }
+    }
+
+    // Check if tables exist by trying a simple query
+    try {
+      await prisma.$queryRaw`SELECT 1`
+      console.log('[Initialize] Database tables accessible')
+    } catch (tableError: any) {
+      console.error('[Initialize] Table access error:', tableError)
+      const errorMsg = tableError?.message || String(tableError)
+      
+      if (errorMsg.includes('does not exist') || errorMsg.includes('relation') || errorMsg.includes('table')) {
+        return {
+          success: false,
+          error: 'Les tables de fidélité n\'existent pas dans la base de données.',
+          details: 'Veuillez exécuter le script create-tables.sql dans Supabase SQL Editor pour créer les tables nécessaires.'
+        }
+      }
+    }
+
     // Check if program already exists with retry
-    const existing = await retryQuery(async () => {
-      return await prisma.loyaltyProgram.findFirst()
-    })
+    let existing
+    try {
+      existing = await retryQuery(async () => {
+        return await prisma.loyaltyProgram.findFirst()
+      }, 2, 200) // Only 2 retries with 200ms delay
+    } catch (findError: any) {
+      console.error('[Initialize] Error finding existing program:', findError)
+      const errorMsg = findError?.message || String(findError)
+      
+      if (errorMsg.includes('prepared statement')) {
+        // This is a transient error, suggest retry
+        return {
+          success: false,
+          error: 'Erreur temporaire de connexion. Veuillez réessayer dans quelques instants.',
+          details: 'Cette erreur se produit parfois dans les environnements serverless. Réessayez dans 5-10 secondes.'
+        }
+      }
+      
+      return {
+        success: false,
+        error: `Erreur lors de la vérification: ${errorMsg}`,
+        details: findError instanceof Error ? findError.stack : undefined
+      }
+    }
     
     if (existing) {
       return { success: true, message: 'Programme déjà existant', programId: existing.id }
     }
+
+    console.log('[Initialize] Creating new loyalty program...')
 
     // Use transaction to ensure atomicity and avoid prepared statement conflicts
     const result = await prisma.$transaction(async (tx) => {
@@ -101,27 +154,61 @@ export async function initializeLoyaltyProgram() {
     })
 
     revalidatePath('/fidelite')
+    console.log('[Initialize] Program created successfully:', result.id)
     return { success: true, message: 'Programme initialisé avec succès', programId: result.id }
   } catch (error) {
-    console.error('Error initializing loyalty program:', error)
+    console.error('[Initialize] Error initializing loyalty program:', error)
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    console.error('[Initialize] Error details:', {
+      message: errorMessage,
+      stack: errorStack,
+      name: error instanceof Error ? error.name : undefined
+    })
     
     // Check if it's a prepared statement error
     const isPreparedStatementError = errorMessage.includes('prepared statement') && 
-                                     errorMessage.includes('already exists')
+                                     (errorMessage.includes('already exists') || errorMessage.includes('s0'))
     
     if (isPreparedStatementError) {
       return { 
         success: false, 
-        error: 'Erreur de connexion à la base de données. Veuillez réessayer dans quelques instants.',
-        details: 'Cette erreur est temporaire et se produit parfois dans les environnements serverless. Réessayez dans quelques secondes.'
+        error: 'Erreur temporaire de connexion. Veuillez réessayer dans 10-15 secondes.',
+        details: 'Cette erreur se produit parfois dans les environnements serverless. Attendez quelques secondes et réessayez.'
+      }
+    }
+    
+    // Check if it's a table/relation error
+    if (errorMessage.includes('does not exist') || errorMessage.includes('relation') || errorMessage.includes('table')) {
+      return {
+        success: false,
+        error: 'Les tables de fidélité n\'existent pas dans la base de données.',
+        details: 'Veuillez exécuter le script create-tables.sql dans Supabase SQL Editor pour créer les tables nécessaires (LoyaltyProgram, LoyaltyTier, LoyaltyAccount, LoyaltyCampaign).'
+      }
+    }
+    
+    // Check if it's a connection error
+    if (errorMessage.includes('Can\'t reach database') || errorMessage.includes('connection') || errorMessage.includes('timeout')) {
+      return {
+        success: false,
+        error: 'Impossible de se connecter à la base de données.',
+        details: 'Vérifiez que votre DATABASE_URL est correctement configuré dans Vercel (Settings → Environment Variables).'
       }
     }
     
     return { 
       success: false, 
       error: `Échec de l'initialisation: ${errorMessage}`,
-      details: error instanceof Error ? error.stack : undefined
+      details: errorStack
+    }
+  } finally {
+    // Always disconnect in serverless
+    try {
+      await prisma.$disconnect()
+    } catch (disconnectError) {
+      // Ignore disconnect errors
+      console.warn('[Initialize] Error disconnecting:', disconnectError)
     }
   }
 }
