@@ -222,33 +222,18 @@ export async function generateNewTicketsAndClients() {
             return { error: 'No stores found. Please create a store first.' };
         }
 
-        // Get existing terminals with retry using raw query
+        // Get existing terminals with retry
+        // Use regular query with retry (raw queries are complex with arrays)
         let terminals: Array<{ id: string; storeId: string; name: string; identifier: string }> = [];
         try {
-            const storeIds = stores.map(s => s.id);
-            if (storeIds.length > 0) {
-                terminals = await retryQuery(async () => {
-                    // Use raw query to avoid prepared statement issues
-                    // Use Prisma.sql for array parameters
-                    const result = await prisma.$queryRaw<Array<{ id: string; storeId: string; name: string; identifier: string }>>`
-                        SELECT id, "storeId", name, identifier FROM "PosTerminal" 
-                        WHERE "storeId" IN (${Prisma.join(storeIds.map(id => Prisma.sql`${id}`), Prisma.sql`, `)})
-                    `;
-                    return result;
-                }, 3, 300);
-            }
+            terminals = await retryQuery(async () => {
+                return await prisma.posTerminal.findMany({
+                    where: { storeId: { in: stores.map(s => s.id) } },
+                });
+            }, 3, 300);
         } catch (error) {
             console.error('Error fetching terminals:', error);
-            // Fallback to regular query if raw query fails
-            try {
-                terminals = await retryQuery(async () => {
-                    return await prisma.posTerminal.findMany({
-                        where: { storeId: { in: stores.map(s => s.id) } },
-                    });
-                }, 2, 200);
-            } catch (fallbackError) {
-                return { error: `Error fetching terminals: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}` };
-            }
+            return { error: `Error fetching terminals: ${error instanceof Error ? error.message : 'Unknown error'}` };
         }
         
         if (terminals.length === 0) {
