@@ -190,6 +190,9 @@ export async function generateNewTicketsAndClients() {
             const pool = new Pool({
                 connectionString: process.env.DATABASE_URL,
                 max: 1, // Single connection for this query
+                ssl: {
+                    rejectUnauthorized: false, // Required for Supabase certificates
+                },
             });
             
             try {
@@ -275,6 +278,9 @@ export async function generateNewTicketsAndClients() {
             const customerPool = new Pool({
                 connectionString: process.env.DATABASE_URL,
                 max: 1,
+                ssl: {
+                    rejectUnauthorized: false,
+                },
             });
             try {
                 const result = await customerPool.query('SELECT id, "firstName", "lastName", email FROM "Customer"');
