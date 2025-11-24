@@ -187,11 +187,13 @@ export async function generateNewTicketsAndClients() {
             const session = await auth();
             if (session?.user?.id) {
                 const userId = session.user.id;
+                // Escape userId to prevent SQL injection (it's already a string from auth, but be safe)
+                const escapedUserId = userId.replace(/'/g, "''");
                 stores = await retryQueryWithFreshClient(async (client) => {
-                    // Use $queryRawUnsafe with fresh client to avoid prepared statement issues
+                    // Use $queryRawUnsafe without parameters - embed value directly (safely escaped)
+                    // This completely avoids prepared statements
                     const result = await client.$queryRawUnsafe<Array<{ id: string; name: string; userId: string | null }>>(
-                        `SELECT id, name, "userId" FROM "Store" WHERE "userId" = $1`,
-                        userId
+                        `SELECT id, name, "userId" FROM "Store" WHERE "userId" = '${escapedUserId}'`
                     );
                     return result;
                 }, 3, 300);
