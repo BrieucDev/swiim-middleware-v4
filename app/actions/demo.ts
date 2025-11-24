@@ -103,7 +103,7 @@ export async function generateDemoData() {
                 subtotal += quantity * unitPrice;
             }
 
-            await prisma.receipt.create({
+            await client.receipt.create({
                 data: {
                     posId: terminal.id,
                     storeId: store.id,
