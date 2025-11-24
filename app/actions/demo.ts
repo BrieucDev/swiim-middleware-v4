@@ -39,12 +39,13 @@ export async function generateDemoData() {
     }
 
     const userId = session.user.id;
+    const client = getFreshPrismaClient();
 
     try {
         // 1. Create a Store if none exists
-        let store = await prisma.store.findFirst({ where: { userId } });
+        let store = await client.store.findFirst({ where: { userId } });
         if (!store) {
-            store = await prisma.store.create({
+            store = await client.store.create({
                 data: {
                     name: 'Magasin Démo',
                     city: 'Paris',
@@ -55,7 +56,7 @@ export async function generateDemoData() {
         }
 
         // 2. Create POS Terminal
-        const terminal = await prisma.posTerminal.create({
+        const terminal = await client.posTerminal.create({
             data: {
                 name: 'TPE Démo 1',
                 identifier: `DEMO-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
@@ -69,7 +70,7 @@ export async function generateDemoData() {
         for (let i = 0; i < 10; i++) {
             const firstName = randomChoice(firstNames);
             const lastName = randomChoice(lastNames);
-            const customer = await prisma.customer.create({
+            const customer = await client.customer.create({
                 data: {
                     firstName,
                     lastName,
