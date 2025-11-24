@@ -1,5 +1,22 @@
 import { PrismaClient } from '@prisma/client'
 
+function normalizeDatabaseUrl(rawUrl?: string) {
+  if (!rawUrl) {
+    throw new Error('DATABASE_URL environment variable is not configured.');
+  }
+  if (!rawUrl.startsWith('postgresql://') && !rawUrl.startsWith('postgres://')) {
+    throw new Error('DATABASE_URL must start with postgresql:// or postgres://');
+  }
+  if (!rawUrl.includes('sslmode=')) {
+    const separator = rawUrl.includes('?') ? '&' : '?';
+    rawUrl = `${rawUrl}${separator}sslmode=require`;
+  }
+  return rawUrl;
+}
+
+const DATABASE_URL = normalizeDatabaseUrl(process.env.DATABASE_URL);
+process.env.DATABASE_URL = DATABASE_URL;
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
@@ -9,9 +26,12 @@ const prismaClientOptions: {
   log?: Array<'query' | 'info' | 'warn' | 'error'>
 } = {
   log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  // Disable prepared statements in serverless to avoid conflicts
-  // This is handled at the connection string level with ?pgbouncer=true
-  // or by using the connection pooler URL from Supabase
+  // Ensure Prisma uses the normalized URL
+  datasources: {
+    db: {
+      url: DATABASE_URL,
+    },
+  },
 }
 
 export const prisma =
