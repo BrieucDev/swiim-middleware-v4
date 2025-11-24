@@ -118,22 +118,33 @@ export async function generateDemoData() {
     }
 }
 
-// Retry function for prepared statement errors
+// Retry function for prepared statement errors with connection reset
 async function retryQuery<T>(
     queryFn: () => Promise<T>,
     maxRetries: number = 3,
-    delay: number = 100
+    delay: number = 200
 ): Promise<T> {
     for (let i = 0; i < maxRetries; i++) {
         try {
             return await queryFn()
         } catch (error: any) {
-            const isPreparedStatementError = error?.message?.includes('prepared statement') && 
-                                           (error?.message?.includes('already exists') || error?.message?.includes('s'))
+            const errorMessage = error?.message || String(error)
+            const isPreparedStatementError = errorMessage.includes('prepared statement') && 
+                                           (errorMessage.includes('already exists') || /s\d+/.test(errorMessage))
             
             if (isPreparedStatementError && i < maxRetries - 1) {
-                // Wait before retrying
-                await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
+                console.log(`[Retry] Prepared statement error, attempt ${i + 1}/${maxRetries}, waiting ${delay * (i + 1)}ms...`)
+                
+                // Disconnect and reconnect to reset prepared statements
+                try {
+                    await prisma.$disconnect()
+                    await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
+                    await prisma.$connect()
+                } catch (disconnectError) {
+                    // Ignore disconnect errors, just wait
+                    await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
+                }
+                
                 continue
             }
             throw error
