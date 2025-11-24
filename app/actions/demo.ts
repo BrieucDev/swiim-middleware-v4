@@ -125,6 +125,20 @@ export async function generateNewTicketsAndClients() {
             return { error: 'DATABASE_URL environment variable is not configured. Please configure it in your Vercel project settings (Settings → Environment Variables).' };
         }
 
+        // Test database connection first
+        try {
+            await prisma.$connect();
+        } catch (connectionError) {
+            const errorMessage = connectionError instanceof Error ? connectionError.message : String(connectionError);
+            console.error('Database connection error:', errorMessage);
+            if (errorMessage.includes("Can't reach database server")) {
+                return { 
+                    error: 'Cannot connect to database. For Vercel/serverless, you MUST use Supabase Connection Pooler, not direct connection. Get it from: Supabase Dashboard → Settings → Database → Connection string → Connection Pooling → URI. Format: postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres' 
+                };
+            }
+            return { error: `Database connection failed: ${errorMessage}` };
+        }
+
         // Get existing stores (try with userId first, then all stores)
         let stores: Array<{ id: string; name: string; userId: string | null }> = [];
         try {
