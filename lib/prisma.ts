@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 
 function normalizeDatabaseUrl(rawUrl?: string) {
   if (!rawUrl) {
@@ -22,16 +22,9 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // Configuration optimized for serverless environments
-const prismaClientOptions: {
-  log?: Array<'query' | 'info' | 'warn' | 'error'>
-} = {
+const prismaClientOptions: Prisma.PrismaClientOptions = {
   log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  // Ensure Prisma uses the normalized URL
-  datasources: {
-    db: {
-      url: DATABASE_URL,
-    },
-  },
+  datasourceUrl: DATABASE_URL,
 }
 
 export const prisma =
