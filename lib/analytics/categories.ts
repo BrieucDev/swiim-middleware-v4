@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma'
 import { Decimal } from '@prisma/client/runtime/library'
+import { loadPrisma } from './utils'
 
 export interface CategoryAnalytics {
   category: string
@@ -21,6 +21,11 @@ export async function getCategoryAnalytics(
   days: number = 30
 ): Promise<CategoryAnalytics[]> {
   try {
+    const prisma = await loadPrisma()
+    if (!prisma) {
+      return getDemoCategoryAnalytics()
+    }
+
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
 

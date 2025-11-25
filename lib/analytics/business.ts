@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma'
 import { Decimal } from '@prisma/client/runtime/library'
+import { loadPrisma } from './utils'
 
 export interface BusinessOverview {
   totalReceipts: number
@@ -37,6 +37,11 @@ export async function getBusinessOverview(
   days: number = 30
 ): Promise<BusinessOverview> {
   try {
+    const prisma = await loadPrisma()
+    if (!prisma) {
+      return getDemoBusinessOverview()
+    }
+
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
     const previousStartDate = new Date()
@@ -219,6 +224,11 @@ export async function getTimeSeriesData(
   days: number = 30
 ): Promise<Array<{ date: string; tickets: number; revenue: number; identificationRate: number }>> {
   try {
+    const prisma = await loadPrisma()
+    if (!prisma) {
+      return getDemoTimeSeriesData(days)
+    }
+
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
 

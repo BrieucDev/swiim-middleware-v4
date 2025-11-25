@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma'
 import { Decimal } from '@prisma/client/runtime/library'
+import { loadPrisma } from './utils'
 
 export interface StorePerformance {
   id: string
@@ -20,6 +20,11 @@ export async function getStorePerformance(
   days: number = 30
 ): Promise<StorePerformance[]> {
   try {
+    const prisma = await loadPrisma()
+    if (!prisma) {
+      return getDemoStorePerformance()
+    }
+
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
 

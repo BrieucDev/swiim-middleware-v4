@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma'
 import { Decimal } from '@prisma/client/runtime/library'
+import { loadPrisma } from './utils'
 
 export interface ClientSegment {
   name: string
@@ -20,6 +20,11 @@ export async function getClientSegments(
   days: number = 90
 ): Promise<ClientSegment[]> {
   try {
+    const prisma = await loadPrisma()
+    if (!prisma) {
+      return getDemoSegments()
+    }
+
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
 
